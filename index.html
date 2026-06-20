@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GRINDWAVE — pixel radio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>GRINDWAVE — generative radio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -25,27 +25,53 @@ body{
 }
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.20) 0 1px,transparent 1px 3px);
-  mix-blend-mode:multiply;opacity:.6}
+  mix-blend-mode:multiply;opacity:.55}
 body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;opacity:.18;
   background-image:linear-gradient(color-mix(in srgb,var(--accent) 40%,transparent) 1px,transparent 1px),
     linear-gradient(90deg,color-mix(in srgb,var(--accent) 40%,transparent) 1px,transparent 1px);
   background-size:34px 34px; animation:drift 24s linear infinite}
 @keyframes drift{to{transform:translate(34px,34px)}}
 
-/* tab-return vignette: thick rectangular edge darkening that fades out */
-#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;transition:opacity 1.9s ease;
-  box-shadow:inset 0 0 165px 88px rgba(0,0,0,.95), inset 0 0 72px 26px rgba(0,0,0,.8);
-  background:radial-gradient(135% 135% at 50% 50%, transparent 46%, rgba(0,0,0,.55) 100%);}
+/* focus vignette — subtle always, grows when the window/tab isn't selected */
+#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.1;transition:opacity 1.9s ease, box-shadow .5s ease;
+  box-shadow:inset 0 0 150px 70px rgba(0,0,0,.9), inset 0 0 60px 18px rgba(0,0,0,.7);
+  background:radial-gradient(140% 140% at 50% 50%, transparent 50%, rgba(0,0,0,.45) 100%);}
+#vig.big{box-shadow:inset 0 0 260px 150px rgba(0,0,0,.96), inset 0 0 120px 50px rgba(0,0,0,.85);}
 
-.shell{position:relative;z-index:3;width:min(880px,94vw);
+/* page rain overlay (rain skin) */
+#rain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s;
+  background-image:repeating-linear-gradient(101deg, transparent 0 8px, rgba(160,205,255,.07) 8px 9px);
+  animation:rainfall .6s linear infinite}
+@keyframes rainfall{from{background-position:0 0}to{background-position:-26px 100vh}}
+body[data-skin="rain"] #rain{opacity:.45}
+
+/* custom cursor follower */
+#cur{position:fixed;left:0;top:0;width:22px;height:22px;border:2px solid var(--accent);border-radius:50%;
+  transform:translate(-50%,-50%);pointer-events:none;z-index:95;box-shadow:0 0 12px var(--accent);
+  mix-blend-mode:screen;transition:width .12s,height .12s,opacity .2s;opacity:0}
+#cur::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%)}
+#cur.big{width:34px;height:34px}
+/* with the custom cursor active (desktop), hide the native cursor everywhere incl. buttons/rows/links */
+body:not(.mobile), body:not(.mobile) *{cursor:none !important}
+
+.wrap{display:flex;flex-direction:column;align-items:stretch;width:min(880px,94vw)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;padding-left:6px;max-width:100%}
+.tab{font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;color:var(--dim);
+  background:#0a1228;border:2px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;padding:8px 11px 11px;
+  transition:color .12s,background .12s,box-shadow .12s;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.active{color:#fff;border-color:var(--accent);box-shadow:0 -2px 16px color-mix(in srgb,var(--accent) 40%,transparent)}
+
+.shell{position:relative;z-index:3;
   background:linear-gradient(180deg,var(--panel),var(--panel2));
   border:3px solid var(--accent); border-radius:18px;
   box-shadow:0 0 0 2px #00000088, 0 0 calc(30px + var(--glow)) color-mix(in srgb,var(--accent) 45%,transparent),
     inset 0 0 0 1px #ffffff12, inset 0 14px 30px #00000055;
-  padding:18px 18px 18px; transition:box-shadow .04s linear;}
+  padding:18px; transition:box-shadow .04s linear;}
 .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.logo{font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:1px;
-  color:#fff;text-shadow:0 0 8px var(--accent), 3px 3px 0 var(--accent2);}
+.emblem{display:none;align-items:center}
+.emblem svg{width:26px;height:26px;filter:drop-shadow(0 0 7px #ffe60a)}
+.logo{font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:1px;color:#fff;text-shadow:0 0 8px var(--accent), 3px 3px 0 var(--accent2);}
 .logo b{color:var(--accent)}
 .tag{font-size:20px;color:var(--dim);margin-left:2px}
 .tag .blink{animation:blink 1s steps(1) infinite;color:var(--accent)}
@@ -54,14 +80,10 @@ body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;o
 .led{width:10px;height:10px;border-radius:2px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
 
 .main{display:grid;grid-template-columns:1.45fr 1fr;gap:14px}
-@media(max-width:680px){.main{grid-template-columns:1fr}}
-
-.screen{position:relative;border-radius:12px;overflow:hidden;
-  background:linear-gradient(180deg,#020611,#040a18);
+.screen{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#020611,#040a18);
   border:2px solid var(--line);box-shadow:inset 0 0 26px #000a, inset 0 0 0 1px #ffffff08}
 #viz{display:block;width:100%;height:212px;image-rendering:pixelated}
-.nowrap{position:absolute;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:2px;
-  text-shadow:0 0 6px #000, 0 1px 0 #000}
+.nowrap{position:absolute;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:2px;text-shadow:0 0 6px #000, 0 1px 0 #000}
 .np-label{font-size:16px;color:var(--accent);letter-spacing:2px}
 .np-title{font-family:'Press Start 2P',monospace;font-size:15px;color:#fff;text-shadow:0 0 10px var(--accent)}
 .np-mood{font-size:18px;color:var(--dim)}
@@ -72,11 +94,11 @@ body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;o
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .list{background:#070d22;border:2px solid var(--line);border-radius:12px;padding:6px;overflow-y:auto;max-height:250px;
   cursor:grab;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
-.row{position:relative;display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;
-  font-size:19px;color:var(--ink);transition:background .12s, transform .12s}
+.list::-webkit-scrollbar{display:none}
+.list.grabbing{cursor:grabbing}
+.row{position:relative;display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:19px;color:var(--ink);transition:background .12s, transform .12s}
 .row:hover{background:#0e1838;transform:translateX(2px)}
-.row.active{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 30%,transparent),transparent);
-  box-shadow:inset 0 0 0 1px var(--accent)}
+.row.active{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 30%,transparent),transparent);box-shadow:inset 0 0 0 1px var(--accent)}
 .dot{width:11px;height:11px;border-radius:3px;flex:none;box-shadow:0 0 8px currentColor}
 .row .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .meta{font-size:14px;color:var(--dim)}
@@ -89,95 +111,97 @@ body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;o
 @keyframes eq{0%,100%{height:4px}50%{height:14px}}
 
 .controls{display:flex;align-items:center;gap:8px;background:#070d22;border:2px solid var(--line);border-radius:12px;padding:10px}
-button.btn{font-family:'VT323',monospace;font-size:20px;color:#02060f;cursor:pointer;
-  background:linear-gradient(180deg,#bfefff,var(--accent));border:none;border-radius:9px;
-  padding:6px 11px;box-shadow:0 3px 0 #0a3a52, 0 0 14px color-mix(in srgb,var(--accent) 60%,transparent);
-  text-shadow:0 1px 0 #fff8;transition:transform .06s, box-shadow .12s}
+button.btn{font-family:'VT323',monospace;font-size:20px;color:#02060f;cursor:pointer;background:linear-gradient(180deg,#bfefff,var(--accent));border:none;border-radius:9px;padding:6px 11px;box-shadow:0 3px 0 #0a3a52, 0 0 14px color-mix(in srgb,var(--accent) 60%,transparent);text-shadow:0 1px 0 #fff8;transition:transform .06s, box-shadow .12s}
 button.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0a3a52}
 button.btn.ghost{background:#0e1838;color:var(--ink);box-shadow:0 3px 0 #060c1e;border:1px solid var(--line)}
 .play{font-size:22px;padding:6px 15px}
 .vol{display:flex;align-items:center;gap:7px;margin-left:auto;font-size:17px;color:var(--dim)}
-input[type=range]{-webkit-appearance:none;appearance:none;width:92px;height:8px;border-radius:6px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:18px;border-radius:3px;
-  background:#fff;box-shadow:0 0 8px var(--accent);cursor:pointer}
+input[type=range]{-webkit-appearance:none;appearance:none;width:92px;height:8px;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:18px;border-radius:3px;background:#fff;box-shadow:0 0 8px var(--accent);cursor:pointer}
 .hint{margin-top:9px;font-size:16px;color:var(--dim);text-align:center;letter-spacing:1px}
 .hint b{color:var(--accent)}
 .marquee{overflow:hidden;white-space:nowrap;margin-top:2px}
-.marquee span{display:inline-block;padding-left:100%;animation:mq 28s linear infinite;color:var(--dim);font-size:16px}
+.marquee span{display:inline-block;padding-left:100%;animation:mq 20s linear infinite;color:var(--dim);font-size:16px}
 @keyframes mq{to{transform:translateX(-100%)}}
 
-/* list: hidden scrollbar + grab-to-scroll */
-.list::-webkit-scrollbar{display:none}
-.list.grabbing{cursor:grabbing}
-
-/* website tabs */
-.wrap{display:flex;flex-direction:column;align-items:stretch;width:min(880px,94vw)}
-.tabs{display:flex;gap:6px;padding-left:6px}
-.tab{font-family:'Press Start 2P',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;color:var(--dim);
-  background:#0a1228;border:2px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;padding:9px 13px 12px;
-  transition:color .12s,background .12s,box-shadow .12s}
-.tab:hover{color:var(--ink)}
-.tab.active{color:#fff;border-color:var(--accent);box-shadow:0 -2px 16px color-mix(in srgb,var(--accent) 40%,transparent)}
-
-/* cyberpunk logo emblem */
-.emblem{display:none;align-items:center}
-.emblem svg{width:26px;height:26px;filter:drop-shadow(0 0 7px #ffe60a)}
-
-/* custom themed tooltip — replaces the native white box */
-#tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;
-  font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;
-  background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;
-  padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;
-  box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
-
-/* ===================== CYBERPUNK SKIN ===================== */
-body[data-skin="cyber"]{background:
-  radial-gradient(1000px 520px at 80% -10%, #ffe60a18, transparent 60%),
-  radial-gradient(820px 420px at 8% 112%, #ff2e6e14, transparent 60%),
-  linear-gradient(180deg,#0b0b07,#060604 60%,#040402);}
-body[data-skin="cyber"] .shell{border-radius:2px;background:linear-gradient(180deg,#0e0e0a,#080806);
-  clip-path:polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))}
-body[data-skin="cyber"] .screen,
-body[data-skin="cyber"] .list,
-body[data-skin="cyber"] .controls,
-body[data-skin="cyber"] button.btn,
-body[data-skin="cyber"] .chip{border-radius:2px}
+/* ============ SKINS ============ */
+/* cyberpunk */
+body[data-skin="cyber"]{background:radial-gradient(1000px 520px at 80% -10%, #ffe60a18, transparent 60%),radial-gradient(820px 420px at 8% 112%, #ff2e6e14, transparent 60%),linear-gradient(180deg,#0b0b07,#060604 60%,#040402);}
+body[data-skin="cyber"] .shell{border-radius:2px;background:linear-gradient(180deg,#0e0e0a,#080806);clip-path:polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))}
+body[data-skin="cyber"] .screen,body[data-skin="cyber"] .list,body[data-skin="cyber"] .controls,body[data-skin="cyber"] button.btn,body[data-skin="cyber"] .chip{border-radius:2px}
 body[data-skin="cyber"] .logo{color:#ffe60a;animation:glitch 2.8s infinite steps(3)}
 body[data-skin="cyber"] .logo b{color:#fff}
 body[data-skin="cyber"] .emblem{display:inline-flex}
 body[data-skin="cyber"] .np-title{text-shadow:0 0 10px #ffe60a, 2px 0 #ff2e6e}
 body[data-skin="cyber"] .tab{border-radius:0;background:#0c0c08;clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%)}
 body[data-skin="cyber"] .tab.active{color:#0a0a06;background:#ffe60a;border-color:#ffe60a;box-shadow:0 0 18px #ffe60a88}
-body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
-@keyframes glitch{0%,92%,100%{text-shadow:0 0 9px var(--accent)}
-  93%{text-shadow:2px 0 #ff2e6e,-2px 0 #00e5ff}95%{text-shadow:-2px 0 #ff2e6e,2px 0 #00e5ff}97%{text-shadow:1px 0 #00e5ff,-1px 0 #ffe60a}}
-
-/* falling-rain overlay (rain skin only) */
-#rain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s;
-  background-image:repeating-linear-gradient(101deg, transparent 0 8px, rgba(160,205,255,.085) 8px 9px);
-  animation:rainfall .6s linear infinite}
-@keyframes rainfall{from{background-position:0 0}to{background-position:-26px 100vh}}
-body[data-skin="rain"] #rain{opacity:.5}
-
-/* ===================== RAIN SKIN ===================== */
-body[data-skin="rain"]{background:
-  radial-gradient(1000px 560px at 70% -10%, #4f7fbf22, transparent 60%),
-  radial-gradient(820px 460px at 12% 112%, #2a3f5f30, transparent 60%),
-  linear-gradient(180deg,#0a1422,#070f1b 60%,#050a14);}
+@keyframes glitch{0%,92%,100%{text-shadow:0 0 9px var(--accent)}93%{text-shadow:2px 0 #ff2e6e,-2px 0 #00e5ff}95%{text-shadow:-2px 0 #ff2e6e,2px 0 #00e5ff}97%{text-shadow:1px 0 #00e5ff,-1px 0 #ffe60a}}
+/* rain */
+body[data-skin="rain"]{background:radial-gradient(1000px 560px at 70% -10%, #4f7fbf22, transparent 60%),radial-gradient(820px 460px at 12% 112%, #2a3f5f30, transparent 60%),linear-gradient(180deg,#0a1422,#070f1b 60%,#050a14);}
 body[data-skin="rain"] .logo{text-shadow:0 0 8px var(--accent), 2px 2px 0 #2b4a72}
-body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(--accent) 45%,transparent)}
+/* vaporwave */
+body[data-skin="vapor"]{background:linear-gradient(180deg,#2a1840,#3a1d52 40%,#0c1530);}
+body[data-skin="vapor"] .shell{border-radius:20px;background:linear-gradient(180deg,#2a1a44,#1a1030)}
+body[data-skin="vapor"] .logo{text-shadow:0 0 10px #ff9ed8, 3px 3px 0 #8ad8ff}
+/* game boy DMG */
+body[data-skin="gameboy"]{background:linear-gradient(180deg,#142210,#0c1a0a);}
+body[data-skin="gameboy"]{--ink:#9bbc0f;--dim:#6a8f1a}
+body[data-skin="gameboy"] .shell{border-radius:4px;background:#0f380f;border-color:#9bbc0f;box-shadow:0 0 0 2px #000,inset 0 0 0 2px #306230}
+body[data-skin="gameboy"] .logo{color:#9bbc0f;text-shadow:none;image-rendering:pixelated}
+body[data-skin="gameboy"] .logo b{color:#cfe86a}
+body[data-skin="gameboy"] .screen,body[data-skin="gameboy"] .list,body[data-skin="gameboy"] .controls{border-radius:2px;border-color:#306230}
+body[data-skin="gameboy"] button.btn{background:linear-gradient(180deg,#9bbc0f,#6a8f1a);color:#0f380f;border-radius:2px;box-shadow:0 3px 0 #143a14}
+/* matrix */
+body[data-skin="matrix"]{background:#000;--ink:#00ff66;--dim:#0a8f44;--panel:#021a0c;--panel2:#010a06;--line:#0a5a2a}
+body[data-skin="matrix"] .shell{border-radius:2px;border-color:#00ff66;background:#010a06;box-shadow:0 0 22px #00ff6655,inset 0 0 0 1px #00ff6622}
+body[data-skin="matrix"] .logo{color:#00ff66;text-shadow:0 0 10px #00ff66;font-family:'VT323',monospace;font-size:26px;letter-spacing:2px}
+body[data-skin="matrix"] .tag,body[data-skin="matrix"] .hint,body[data-skin="matrix"] .marquee span{font-family:'VT323',monospace}
+body[data-skin="matrix"] button.btn{background:linear-gradient(180deg,#00ff66,#0a8f44);color:#001a0c}
+/* lo-fi café */
+body[data-skin="lofi"]{background:linear-gradient(180deg,#241a12,#1a130c);--ink:#e8d4b8;--dim:#a98c6a;--line:#4a3a2a;--accent:#d2a679;--accent2:#c89b6c}
+body[data-skin="lofi"] .shell{border-radius:16px;background:linear-gradient(180deg,#2c2016,#1c140d);border-color:#d2a679}
+body[data-skin="lofi"] .logo{color:#e8d4b8;text-shadow:0 0 8px #d2a679, 2px 2px 0 #6a4a2a}
+/* forest */
+body[data-skin="forest"]{background:radial-gradient(900px 500px at 50% -10%, #2a6a3a22, transparent 60%),linear-gradient(180deg,#0e2014,#08160d);--ink:#dff7e2;--dim:#6fae84;--line:#1f4a2e}
+body[data-skin="forest"] .shell{border-radius:18px;background:linear-gradient(180deg,#10301c,#0a2014);border-color:#7bd88f}
+body[data-skin="forest"] .logo{text-shadow:0 0 8px #7bd88f, 2px 2px 0 #1f4a2e}
+/* space */
+body[data-skin="space"]{background:radial-gradient(1100px 600px at 70% -20%, #6b4ad022, transparent 60%),linear-gradient(180deg,#0a0a1e,#05030f 60%,#020108);--ink:#e6e0ff;--dim:#9a8cd0;--line:#2a2055}
+body[data-skin="space"] .shell{border-radius:16px;background:linear-gradient(180deg,#120e2c,#0a081c);border-color:#b18cff}
+body[data-skin="space"] .logo{text-shadow:0 0 12px #b18cff, 2px 2px 0 #3a2a6a}
+/* dungeon */
+body[data-skin="dungeon"]{background:radial-gradient(700px 400px at 50% 120%, #ff7a2c1c, transparent 60%),linear-gradient(180deg,#15100a,#0c0805);--ink:#f0d6b0;--dim:#a8794a;--line:#3a2a18;--accent:#ff9a3c;--accent2:#ffb45a}
+body[data-skin="dungeon"] .shell{border-radius:8px;background:linear-gradient(180deg,#1c140c,#120c07);border-color:#ff9a3c;animation:torch 3.5s ease-in-out infinite}
+body[data-skin="dungeon"] .logo{color:#ffb45a;text-shadow:0 0 10px #ff7a2c, 2px 2px 0 #3a2010}
+@keyframes torch{0%,100%{box-shadow:0 0 0 2px #000,0 0 26px #ff7a2c44,inset 0 0 30px #0008}50%{box-shadow:0 0 0 2px #000,0 0 40px #ff7a2c66,inset 0 0 30px #0008}}
+
+/* tooltip */
+#tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
+body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
+
+/* mobile */
+@media(max-width:700px){
+  .main{grid-template-columns:1fr}
+  .wrap{width:96vw}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  #viz{height:170px}
+  .list{max-height:200px}
+}
+body.mobile #cur{display:none}
+body.mobile{cursor:auto !important}
+body.mobile button.btn{padding:10px 14px;font-size:22px}
+body.mobile .play{padding:10px 20px}
+body.mobile .row{padding:11px 8px;font-size:20px}
 </style>
 </head>
 <body>
 <div id="vig"></div>
 <div id="rain"></div>
+<div id="cur"></div>
+<audio id="silent" loop playsinline></audio>
 <div class="wrap">
-<div class="tabs">
-  <button class="tab active" data-skin="pixel" data-tip="Pixel radio · 30 chiptune stations">▚ PIXEL RADIO</button>
-  <button class="tab" data-skin="cyber" data-tip="Cyberpunk · 15 neon-EDM stations">▚ CYBERPUNK</button>
-  <button class="tab" data-skin="rain" data-tip="Rain · 15 calm lo-fi stations">▚ RAIN</button>
-</div>
+<div class="tabs" id="tabs"></div>
 <div class="shell" id="shell">
   <div class="topbar">
     <span class="emblem" id="emblem" aria-hidden="true"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M4 7 L30 7 L36 13 L36 36 L14 36 L8 30 L8 7 Z" fill="#0b0b06" stroke="#ffe60a" stroke-width="2.2"/><path d="M26 13 H15 V32 H26 V27 H20 V18 H26 Z" fill="#ffe60a"/><rect x="29.5" y="13" width="3.4" height="19" fill="#ffe60a"/></svg></span>
@@ -185,7 +209,6 @@ body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(
     <div class="tag"><span id="tagtxt">pixel radio</span><span class="blink">_</span></div>
     <div class="power"><span class="led" id="led"></span><span id="pstat">STANDBY</span></div>
   </div>
-
   <div class="main">
     <div class="screen">
       <canvas id="viz" width="520" height="212"></canvas>
@@ -196,7 +219,6 @@ body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(
         <div class="chips" id="chips"></div>
       </div>
     </div>
-
     <div class="side">
       <div class="list" id="list"></div>
       <div class="controls">
@@ -206,7 +228,7 @@ body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(
         <button class="btn ghost" id="shuffle" data-tip="Reshuffle this tune (R)">⟳</button>
         <div class="vol">VOL<input id="vol" type="range" min="0" max="100" value="62"></div>
       </div>
-      <div class="marquee"><span id="mqText">Generative chiptune — every loop is freshly composed, never the same twice.</span></div>
+      <div class="marquee"><span id="mqText">Every loop is freshly composed. Yes, even the questionable ones.</span></div>
     </div>
   </div>
   <div class="hint"><b>SPACE</b> play/pause &nbsp;·&nbsp; <b>← →</b> change station &nbsp;·&nbsp; <b>R</b> reshuffle &nbsp;·&nbsp; drag the list to scroll</div>
@@ -217,22 +239,48 @@ body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(
 "use strict";
 /* ============================================================ THEORY */
 const SCALES={
-  major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], dorian:[0,2,3,5,7,9,10],
+  major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], dorian:[0,2,3,5,7,9,10], phryg:[0,1,3,5,7,8,10],
   lydian:[0,2,4,6,7,9,11], mixo:[0,2,4,5,7,9,10], pentaMaj:[0,2,4,7,9], pentaMin:[0,3,5,7,10],
 };
 const BARS=4;
-// Stations — distinct keys/scales/tempos/moods. leadType pulse|saw, pump=sidechain depth,
-// arp=add a shimmering 16th arpeggio, loops=nominal song length in 4-bar phrases.
 const PA=[0,5,3,4], PB=[0,3,4,0], PC=[0,3,5,4], PD=[0,4,5,3], PE=[0,5,6,4];
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 function shade(hex,amt){ const n=parseInt(hex.slice(1),16), cl=v=>v<0?0:v>255?255:v;
   const r=cl(((n>>16)&255)+amt),g=cl(((n>>8)&255)+amt),b=cl((n&255)+amt);
   return '#'+(((1<<24)+(r<<16)+(g<<8)+b)>>>0).toString(16).slice(1); }
 function st(o){ o.vib=o.vib??4; o.duty=o.duty??.5; o.pump=o.pump??.2; o.arp=o.arp??false; o.prog=o.prog||PA;
-  o.loops=o.loops??Math.max(8,Math.round(155*o.bpm/(16*60))); o.b=o.b||shade(o.a,44); return o; }
+  o.loops=o.loops??Math.max(8,Math.round(155*o.bpm/(16*60))); o.rainLvl=o.rainLvl??.04; o.thunder=o.thunder??false; o.vary=o.vary??false;
+  o.b=o.b||shade(o.a,44); return o; }
+
+const SECTION_META={
+  pixel:{label:"PIXEL RADIO",tag:"pixel radio",tip:"30 chiptune stations"},
+  cyber:{label:"CYBERPUNK",tag:"cyberwave",tip:"15 neon-EDM stations"},
+  rain:{label:"RAIN",tag:"rain radio",tip:"15 calm lo-fi + real rain"},
+  vapor:{label:"VAPORWAVE",tag:"ＶＡＰＯＲ",tip:"15 dreamy mallsoft tracks"},
+  gameboy:{label:"GAME BOY",tag:"DMG-01",tip:"15 pure 8-bit tracks"},
+  matrix:{label:"MATRIX",tag:"follow_the_rabbit",tip:"15 glitchy hacker tracks"},
+  lofi:{label:"LO-FI CAFÉ",tag:"lo-fi café",tip:"15 jazzy vinyl tracks"},
+  forest:{label:"FOREST",tag:"forest fm",tip:"15 airy nature tracks"},
+  space:{label:"SPACE",tag:"deep space",tip:"15 cosmic drone tracks"},
+  dungeon:{label:"DUNGEON",tag:"torchlight",tip:"15 RPG dungeon tracks"},
+};
+const SECTION_ORDER=Object.keys(SECTION_META);
+// forced palettes for strong-identity skins (others use station colors)
+const SKIN_ACCENT={ gameboy:["#9bbc0f","#306230"], matrix:["#00ff66","#1aff8c"] };
+// per-section sound character
+const SECFX={
+  pixel:{}, cyber:{reese:true,grit:1.4}, rain:{amb:"rain",leadLP:2300},
+  vapor:{leadLP:2800,chorus:true}, gameboy:{square:true}, matrix:{leadLP:7000,glitch:true},
+  lofi:{amb:"crackle",leadLP:2500,warm:true}, forest:{amb:"birds",leadLP:3000},
+  space:{amb:"drone",leadLP:2400,longpad:true}, dungeon:{leadLP:2300},
+};
+const fx=()=>SECFX[sectionKey]||{};
 
 const SECTIONS={
   pixel:[
-    st({name:"Neon Dawn",mood:"warm lo-fi sunrise",key:72,scale:"lydian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#36e3ff",prog:PC}),
+    st({name:"Neon Dawn",mood:"warm lo-fi sunrise",key:72,scale:"lydian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#36e3ff",prog:PC,vary:true}),
     st({name:"Cassette Quest",mood:"cozy overworld",key:69,scale:"dorian",bpm:104,lead:"pulse",density:.54,drums:"backbeat",bass:"bounce",pump:.16,a:"#ffc24a",prog:PB}),
     st({name:"Elysia",mood:"euphoric saber-EDM",key:64,scale:"major",bpm:128,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.42,arp:true,a:"#ff5ad8"}),
     st({name:"Hyperdrive",mood:"arcade full send",key:67,scale:"major",bpm:138,lead:"pulse",density:.7,drums:"four",bass:"drive",pump:.34,a:"#ff7ad0"}),
@@ -248,7 +296,7 @@ const SECTIONS={
     st({name:"Coin Rush",mood:"frantic collect",key:64,scale:"major",bpm:150,lead:"pulse",density:.82,drums:"four",bass:"drive",pump:.36,a:"#ffb03a"}),
     st({name:"Sprite Garden",mood:"gentle skip",key:67,scale:"pentaMaj",bpm:90,lead:"pulse",duty:.25,density:.46,drums:"chill",bass:"bounce",a:"#9bff8c"}),
     st({name:"Turbo Tunnel",mood:"speed stage",key:60,scale:"minor",bpm:144,lead:"saw",density:.78,drums:"four",bass:"drive",pump:.4,a:"#ff4d6d"}),
-    st({name:"Chip Choir",mood:"bittersweet hymn",key:65,scale:"dorian",bpm:84,lead:"pulse",density:.42,drums:"swing",bass:"roots",a:"#8ca8ff"}),
+    st({name:"Chip Choir",mood:"bittersweet hymn",key:65,scale:"dorian",bpm:84,lead:"pulse",density:.42,drums:"swing",bass:"roots",a:"#8ca8ff",vary:true}),
     st({name:"Mellow Modem",mood:"dial-up calm",key:70,scale:"lydian",bpm:76,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#5ad7ff"}),
     st({name:"Cartridge Dreams",mood:"nostalgic glow",key:68,scale:"major",bpm:100,lead:"pulse",density:.52,drums:"backbeat",bass:"roots",a:"#ffc46a",prog:PB}),
     st({name:"Pulse Meadow",mood:"airy lead + pads",key:74,scale:"pentaMaj",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"pad",a:"#a0ffd6"}),
@@ -264,73 +312,179 @@ const SECTIONS={
     st({name:"Game Over Blues",mood:"wistful end",key:61,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.34,drums:"sparse",bass:"pad",a:"#7f8cff"}),
   ],
   cyber:[
-    st({name:"Night City",mood:"neon skyline pulse",key:61,scale:"minor",bpm:120,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.45,a:"#ffe60a"}),
-    st({name:"Chrome Veins",mood:"cold industrial",key:59,scale:"minor",bpm:128,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.5,a:"#ff2e6e"}),
-    st({name:"Black ICE",mood:"hacking tension",key:60,scale:"dorian",bpm:132,lead:"saw",density:.72,drums:"four",bass:"drive",pump:.46,arp:true,a:"#00e5ff"}),
-    st({name:"Neon Yakuza",mood:"menacing strut",key:57,scale:"minor",bpm:112,lead:"saw",density:.6,drums:"backbeat",bass:"drive",pump:.4,a:"#ffd000",prog:PE}),
-    st({name:"Data Heist",mood:"driving chase",key:62,scale:"minor",bpm:140,lead:"saw",density:.8,drums:"four",bass:"drive",pump:.5,a:"#ff3b6b"}),
-    st({name:"Ripperdoc",mood:"clinical cold",key:58,scale:"dorian",bpm:116,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.42,a:"#39e0ff"}),
-    st({name:"Synth Samurai",mood:"blade groove",key:64,scale:"mixo",bpm:124,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.44,arp:true,a:"#ffe60a",prog:PD}),
-    st({name:"Megabuilding",mood:"looming bass",key:55,scale:"minor",bpm:108,lead:"saw",density:.56,drums:"backbeat",bass:"drive",pump:.4,a:"#ff2e6e",prog:PE}),
-    st({name:"Braindance",mood:"woozy hypnotic",key:63,scale:"dorian",bpm:100,lead:"saw",density:.5,drums:"swing",bass:"pad",pump:.34,a:"#b46bff"}),
-    st({name:"Afterlife",mood:"moody club",key:60,scale:"minor",bpm:122,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.46,a:"#00e5ff"}),
-    st({name:"Corpo Plaza",mood:"sleek + cold",key:65,scale:"mixo",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.4,a:"#ffe60a",prog:PD}),
-    st({name:"Voodoo Bass",mood:"dub menace",key:58,scale:"minor",bpm:92,lead:"saw",density:.5,drums:"backbeat",bass:"drive",pump:.38,a:"#ff3b6b"}),
-    st({name:"Quickhack",mood:"glitch sprint",key:61,scale:"minor",bpm:146,lead:"saw",density:.82,drums:"four",bass:"drive",pump:.52,arp:true,a:"#39e0ff"}),
-    st({name:"Edgerunner",mood:"reckless rush",key:63,scale:"minor",bpm:134,lead:"saw",density:.76,drums:"four",bass:"drive",pump:.48,a:"#ffd000"}),
-    st({name:"2077 Drive",mood:"euphoric night",key:67,scale:"major",bpm:126,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.44,arp:true,a:"#ffe60a",prog:PD}),
+    st({name:"Night City",mood:"neon skyline pulse",key:61,scale:"minor",bpm:120,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.4,a:"#ffe60a"}),
+    st({name:"Chrome Veins",mood:"cold industrial",key:59,scale:"phryg",bpm:128,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.44,a:"#ff2e6e"}),
+    st({name:"Black ICE",mood:"hacking tension",key:60,scale:"dorian",bpm:132,lead:"saw",density:.72,drums:"four",bass:"drive",pump:.42,arp:true,a:"#00e5ff"}),
+    st({name:"Neon Yakuza",mood:"menacing strut",key:57,scale:"minor",bpm:112,lead:"saw",density:.6,drums:"backbeat",bass:"drive",pump:.36,a:"#ffd000",prog:PE}),
+    st({name:"Data Heist",mood:"driving chase",key:62,scale:"minor",bpm:140,lead:"saw",density:.8,drums:"four",bass:"drive",pump:.44,a:"#ff3b6b",vary:true}),
+    st({name:"Ripperdoc",mood:"clinical cold",key:58,scale:"dorian",bpm:116,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.4,a:"#39e0ff"}),
+    st({name:"Synth Samurai",mood:"blade groove",key:64,scale:"mixo",bpm:124,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.4,arp:true,a:"#ffe60a",prog:PD}),
+    st({name:"Megabuilding",mood:"looming bass",key:55,scale:"phryg",bpm:108,lead:"saw",density:.56,drums:"backbeat",bass:"drive",pump:.36,a:"#ff2e6e",prog:PE}),
+    st({name:"Braindance",mood:"woozy hypnotic",key:63,scale:"dorian",bpm:100,lead:"saw",density:.5,drums:"swing",bass:"pad",pump:.32,a:"#b46bff"}),
+    st({name:"Afterlife",mood:"moody club",key:60,scale:"minor",bpm:122,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.42,a:"#00e5ff"}),
+    st({name:"Corpo Plaza",mood:"sleek + cold",key:65,scale:"mixo",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.38,a:"#ffe60a",prog:PD}),
+    st({name:"Voodoo Bass",mood:"dub menace",key:58,scale:"minor",bpm:92,lead:"saw",density:.5,drums:"backbeat",bass:"drive",pump:.34,a:"#ff3b6b"}),
+    st({name:"Quickhack",mood:"glitch sprint",key:61,scale:"minor",bpm:146,lead:"saw",density:.82,drums:"four",bass:"drive",pump:.46,arp:true,a:"#39e0ff"}),
+    st({name:"Edgerunner",mood:"reckless rush",key:63,scale:"phryg",bpm:134,lead:"saw",density:.76,drums:"four",bass:"drive",pump:.44,a:"#ffd000"}),
+    st({name:"2077 Drive",mood:"euphoric night",key:67,scale:"major",bpm:126,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.4,arp:true,a:"#ffe60a",prog:PD}),
   ],
   rain:[
-    st({name:"Petrichor",mood:"first-rain calm",key:67,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#6fb6ff",prog:PC}),
-    st({name:"Window Seat",mood:"cozy grey",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#8ab0d8"}),
-    st({name:"Grey Morning",mood:"soft wake",key:70,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#9ec7e8",prog:PC}),
-    st({name:"Puddle Steps",mood:"gentle skip",key:68,scale:"dorian",bpm:88,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"bounce",pump:.12,a:"#5ad1d0"}),
-    st({name:"Soft Static",mood:"warm hush",key:72,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#7f9fd6"}),
-    st({name:"Umbrella",mood:"easy stroll",key:66,scale:"minor",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#6a9fe0"}),
-    st({name:"Drizzle",mood:"light patter",key:69,scale:"pentaMin",bpm:90,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"roots",pump:.12,a:"#73c6c0"}),
-    st({name:"Thunder Far Off",mood:"distant low",key:60,scale:"minor",bpm:64,lead:"pulse",duty:.2,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#5a78b8"}),
-    st({name:"Wet Pavement",mood:"neon reflection",key:64,scale:"dorian",bpm:86,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"roots",pump:.14,a:"#5ab0e0"}),
-    st({name:"Tea & Rain",mood:"warm indoors",key:71,scale:"lydian",bpm:76,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#9ad0c4"}),
-    st({name:"Midnight Shower",mood:"late calm",key:62,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#7b86d6"}),
-    st({name:"Storm Lull",mood:"between waves",key:67,scale:"dorian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#6fbfe0"}),
-    st({name:"Cloudbank",mood:"floating grey",key:74,scale:"pentaMaj",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.06,a:"#a9c4e6",prog:PC}),
-    st({name:"Raincheck",mood:"wistful pause",key:65,scale:"minor",bpm:78,lead:"pulse",duty:.25,density:.38,drums:"chill",bass:"roots",pump:.1,a:"#8a9fd0"}),
-    st({name:"Downpour",mood:"steady full rain",key:63,scale:"dorian",bpm:94,lead:"pulse",duty:.3,density:.5,drums:"swing",bass:"bounce",pump:.14,a:"#4fb4d8"}),
+    st({name:"Petrichor",mood:"first-rain calm",key:67,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#6fb6ff",prog:PC,rainLvl:.035}),
+    st({name:"Window Seat",mood:"cozy grey",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#8ab0d8",rainLvl:.045}),
+    st({name:"Grey Morning",mood:"soft wake",key:70,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#9ec7e8",prog:PC,rainLvl:.03}),
+    st({name:"Puddle Steps",mood:"gentle skip",key:68,scale:"dorian",bpm:88,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"bounce",pump:.12,a:"#5ad1d0",rainLvl:.05}),
+    st({name:"Soft Static",mood:"warm hush",key:72,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#7f9fd6",rainLvl:.03}),
+    st({name:"Umbrella",mood:"easy stroll",key:66,scale:"minor",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#6a9fe0",rainLvl:.045}),
+    st({name:"Drizzle",mood:"light patter",key:69,scale:"pentaMin",bpm:90,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"roots",pump:.12,a:"#73c6c0",rainLvl:.03}),
+    st({name:"Thunder Far Off",mood:"distant low",key:60,scale:"minor",bpm:64,lead:"pulse",duty:.2,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#5a78b8",rainLvl:.04,thunder:true}),
+    st({name:"Wet Pavement",mood:"neon reflection",key:64,scale:"dorian",bpm:86,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"roots",pump:.14,a:"#5ab0e0",rainLvl:.05}),
+    st({name:"Tea & Rain",mood:"warm indoors",key:71,scale:"lydian",bpm:76,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#9ad0c4",rainLvl:.035}),
+    st({name:"Midnight Shower",mood:"late calm",key:62,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#7b86d6",rainLvl:.04}),
+    st({name:"Storm Lull",mood:"between waves",key:67,scale:"dorian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#6fbfe0",rainLvl:.05,thunder:true}),
+    st({name:"Cloudbank",mood:"floating grey",key:74,scale:"pentaMaj",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.06,a:"#a9c4e6",prog:PC,rainLvl:.03}),
+    st({name:"Raincheck",mood:"wistful pause",key:65,scale:"minor",bpm:78,lead:"pulse",duty:.25,density:.38,drums:"chill",bass:"roots",pump:.1,a:"#8a9fd0",rainLvl:.04}),
+    st({name:"Downpour",mood:"steady full rain",key:63,scale:"dorian",bpm:94,lead:"pulse",duty:.3,density:.5,drums:"swing",bass:"bounce",pump:.14,a:"#4fb4d8",rainLvl:.08,thunder:true}),
+  ],
+  vapor:[
+    st({name:"Mallsoft",mood:"empty mall dream",key:69,scale:"major",bpm:70,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"pad",pump:.08,a:"#ff9ed8",prog:PD}),
+    st({name:"Plastic Love",mood:"city pop haze",key:72,scale:"lydian",bpm:84,lead:"pulse",duty:.3,density:.46,drums:"backbeat",bass:"bounce",pump:.12,a:"#8ad8ff"}),
+    st({name:"Pool Sunset",mood:"warm chlorine",key:67,scale:"mixo",bpm:76,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.1,a:"#ffb0e0",prog:PC}),
+    st({name:"VHS Dream",mood:"tracking lines",key:65,scale:"major",bpm:64,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#c8a0ff",vary:true}),
+    st({name:"Marble Hall",mood:"echoing lobby",key:70,scale:"lydian",bpm:72,lead:"pulse",duty:.25,density:.36,drums:"sparse",bass:"pad",a:"#9ed8ff",prog:PC}),
+    st({name:"Soda Pop",mood:"fizzy nostalgia",key:74,scale:"major",bpm:88,lead:"pulse",duty:.3,density:.5,drums:"backbeat",bass:"bounce",pump:.14,a:"#ffc0e8"}),
+    st({name:"Escalator",mood:"slow ascent",key:68,scale:"mixo",bpm:68,lead:"pulse",duty:.25,density:.34,drums:"chill",bass:"pad",a:"#bfa0ff",prog:PD}),
+    st({name:"Florida Water",mood:"humid drift",key:71,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",a:"#8af0e0"}),
+    st({name:"Neon Palms",mood:"pink horizon",key:66,scale:"major",bpm:80,lead:"pulse",duty:.3,density:.44,drums:"backbeat",bass:"bounce",pump:.12,a:"#ff9ed8",prog:PC}),
+    st({name:"Cassette Sun",mood:"melted tape",key:69,scale:"mixo",bpm:72,lead:"pulse",duty:.25,density:.38,drums:"chill",bass:"pad",a:"#ffd0a0"}),
+    st({name:"Dial Tone",mood:"hold music",key:64,scale:"major",bpm:66,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#a0c8ff",prog:PD}),
+    st({name:"Aloe",mood:"cool + green",key:72,scale:"lydian",bpm:78,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",a:"#9af0c8"}),
+    st({name:"After Hours",mood:"closed sign glow",key:67,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.36,drums:"sparse",bass:"pad",a:"#c89eff"}),
+    st({name:"Pastel Sky",mood:"airbrush dawn",key:74,scale:"major",bpm:82,lead:"pulse",duty:.3,density:.46,drums:"backbeat",bass:"bounce",pump:.12,a:"#ffc0e0",prog:PC}),
+    st({name:"Slow Modem",mood:"buffering bliss",key:65,scale:"mixo",bpm:60,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#9ed0ff"}),
+  ],
+  gameboy:[
+    st({name:"Pocket Quest",mood:"adventure start",key:69,scale:"major",bpm:120,lead:"pulse",density:.62,drums:"four",bass:"bounce",pump:.18,a:"#9bbc0f",prog:PB}),
+    st({name:"Link Cable",mood:"two-player",key:67,scale:"mixo",bpm:132,lead:"pulse",density:.7,drums:"four",bass:"drive",pump:.22,arp:true,a:"#9bbc0f"}),
+    st({name:"Dot Matrix",mood:"green grid run",key:64,scale:"minor",bpm:128,lead:"pulse",density:.66,drums:"backbeat",bass:"drive",a:"#9bbc0f",vary:true}),
+    st({name:"Green Town",mood:"sleepy village",key:72,scale:"major",bpm:96,lead:"pulse",density:.5,drums:"chill",bass:"roots",a:"#9bbc0f",prog:PC}),
+    st({name:"AA Batteries",mood:"low-power chip",key:65,scale:"dorian",bpm:112,lead:"pulse",density:.58,drums:"backbeat",bass:"bounce",a:"#9bbc0f"}),
+    st({name:"8-Bit Hero",mood:"brave march",key:67,scale:"major",bpm:140,lead:"pulse",density:.74,drums:"four",bass:"drive",pump:.2,a:"#9bbc0f",prog:PD}),
+    st({name:"Save Battery",mood:"menu hum",key:69,scale:"lydian",bpm:88,lead:"pulse",density:.46,drums:"chill",bass:"pad",a:"#9bbc0f"}),
+    st({name:"Greedy March",mood:"coin grab",key:63,scale:"mixo",bpm:124,lead:"pulse",density:.68,drums:"four",bass:"drive",a:"#9bbc0f",prog:PB}),
+    st({name:"Super Game",mood:"world map",key:71,scale:"major",bpm:116,lead:"pulse",density:.62,drums:"backbeat",bass:"bounce",pump:.18,a:"#9bbc0f"}),
+    st({name:"Mono Mission",mood:"stealth stage",key:60,scale:"minor",bpm:108,lead:"pulse",density:.56,drums:"backbeat",bass:"roots",a:"#9bbc0f"}),
+    st({name:"Pixel Pet",mood:"cute companion",key:74,scale:"pentaMaj",bpm:100,lead:"pulse",density:.5,drums:"chill",bass:"bounce",a:"#9bbc0f"}),
+    st({name:"Cartridge Click",mood:"power on",key:67,scale:"major",bpm:150,lead:"pulse",density:.8,drums:"four",bass:"drive",pump:.2,a:"#9bbc0f"}),
+    st({name:"Sprite Flip",mood:"boss fight",key:59,scale:"minor",bpm:144,lead:"pulse",density:.78,drums:"four",bass:"drive",pump:.22,a:"#9bbc0f"}),
+    st({name:"Game Link",mood:"trade screen",key:70,scale:"dorian",bpm:104,lead:"pulse",density:.54,drums:"swing",bass:"roots",a:"#9bbc0f"}),
+    st({name:"Tetromino",mood:"falling blocks",key:64,scale:"minor",bpm:136,lead:"pulse",density:.72,drums:"four",bass:"bounce",arp:true,a:"#9bbc0f",prog:PA}),
+  ],
+  matrix:[
+    st({name:"Wake Up",mood:"the message",key:60,scale:"minor",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.3,a:"#00ff66"}),
+    st({name:"Red Pill",mood:"point of no return",key:58,scale:"phryg",bpm:126,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.32,a:"#00ff66"}),
+    st({name:"The Construct",mood:"loading program",key:62,scale:"dorian",bpm:110,lead:"saw",density:.56,drums:"backbeat",bass:"drive",a:"#00ff66",vary:true}),
+    st({name:"Agent",mood:"relentless pursuit",key:57,scale:"phryg",bpm:138,lead:"saw",density:.74,drums:"four",bass:"drive",pump:.34,a:"#00ff66"}),
+    st({name:"Zion",mood:"underground rave",key:61,scale:"minor",bpm:144,lead:"saw",density:.8,drums:"four",bass:"drive",pump:.34,a:"#00ff66"}),
+    st({name:"Glitch in Code",mood:"déjà vu",key:63,scale:"dorian",bpm:122,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.3,arp:true,a:"#00ff66"}),
+    st({name:"Mainframe",mood:"server hum",key:55,scale:"minor",bpm:100,lead:"saw",density:.5,drums:"backbeat",bass:"drive",a:"#00ff66"}),
+    st({name:"Trace Program",mood:"being followed",key:59,scale:"phryg",bpm:130,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.32,a:"#00ff66"}),
+    st({name:"Kernel Panic",mood:"system crash",key:56,scale:"minor",bpm:150,lead:"saw",density:.84,drums:"four",bass:"drive",pump:.36,a:"#00ff66"}),
+    st({name:"Ghost Process",mood:"unseen daemon",key:64,scale:"dorian",bpm:108,lead:"saw",density:.54,drums:"backbeat",bass:"drive",a:"#00ff66"}),
+    st({name:"Root Access",mood:"breaking in",key:60,scale:"minor",bpm:134,lead:"saw",density:.72,drums:"four",bass:"drive",pump:.32,arp:true,a:"#00ff66"}),
+    st({name:"Null Pointer",mood:"void error",key:58,scale:"phryg",bpm:116,lead:"saw",density:.6,drums:"four",bass:"drive",a:"#00ff66"}),
+    st({name:"Daemon",mood:"background thread",key:62,scale:"minor",bpm:104,lead:"saw",density:.52,drums:"swing",bass:"drive",a:"#00ff66"}),
+    st({name:"Overflow",mood:"buffer breach",key:57,scale:"minor",bpm:142,lead:"saw",density:.78,drums:"four",bass:"drive",pump:.34,a:"#00ff66"}),
+    st({name:"0x4D",mood:"raw hex",key:61,scale:"phryg",bpm:128,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.3,a:"#00ff66"}),
+  ],
+  lofi:[
+    st({name:"Late Study",mood:"3am notes",key:65,scale:"dorian",bpm:78,lead:"pulse",duty:.2,density:.4,drums:"swing",bass:"roots",pump:.1,a:"#d2a679",vary:true}),
+    st({name:"Espresso",mood:"morning warm-up",key:68,scale:"major",bpm:88,lead:"pulse",duty:.25,density:.46,drums:"swing",bass:"bounce",pump:.12,a:"#c89b6c"}),
+    st({name:"Vinyl Dust",mood:"old record",key:64,scale:"minor",bpm:74,lead:"pulse",duty:.2,density:.38,drums:"swing",bass:"roots",a:"#b5835a"}),
+    st({name:"Homework",mood:"focus loop",key:67,scale:"dorian",bpm:82,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"roots",pump:.1,a:"#e0b88a"}),
+    st({name:"Cassette Jazz",mood:"smoky chords",key:70,scale:"dorian",bpm:80,lead:"pulse",duty:.2,density:.4,drums:"swing",bass:"bounce",a:"#d8a86a"}),
+    st({name:"4 AM",mood:"can't sleep",key:62,scale:"minor",bpm:70,lead:"pulse",duty:.125,density:.34,drums:"chill",bass:"pad",a:"#c0a080"}),
+    st({name:"Mellow Hours",mood:"slow afternoon",key:69,scale:"major",bpm:84,lead:"pulse",duty:.25,density:.44,drums:"swing",bass:"roots",pump:.1,a:"#d2a679"}),
+    st({name:"Brown Sugar",mood:"cozy warmth",key:66,scale:"dorian",bpm:76,lead:"pulse",duty:.2,density:.4,drums:"swing",bass:"bounce",a:"#caa070"}),
+    st({name:"Soft Focus",mood:"blurred edges",key:71,scale:"lydian",bpm:72,lead:"pulse",duty:.125,density:.34,drums:"chill",bass:"pad",a:"#e0c090"}),
+    st({name:"Tape Hiss",mood:"warm noise",key:64,scale:"minor",bpm:78,lead:"pulse",duty:.2,density:.38,drums:"swing",bass:"roots",a:"#b89060"}),
+    st({name:"Warm Mug",mood:"hands around it",key:68,scale:"major",bpm:82,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"bounce",pump:.1,a:"#d8b07a"}),
+    st({name:"Night Owl",mood:"quiet hustle",key:63,scale:"dorian",bpm:86,lead:"pulse",duty:.2,density:.46,drums:"swing",bass:"roots",a:"#c89b6c"}),
+    st({name:"Sleepy Sunday",mood:"no plans",key:70,scale:"major",bpm:68,lead:"pulse",duty:.125,density:.32,drums:"chill",bass:"pad",a:"#e0c8a0"}),
+    st({name:"Old Records",mood:"crate digging",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.2,density:.42,drums:"swing",bass:"bounce",a:"#caa078"}),
+    st({name:"Chillhop",mood:"head-nod groove",key:67,scale:"minor",bpm:90,lead:"pulse",duty:.25,density:.48,drums:"swing",bass:"roots",pump:.12,a:"#d2a679"}),
+  ],
+  forest:[
+    st({name:"Morning Dew",mood:"fresh + bright",key:72,scale:"pentaMaj",bpm:88,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"bounce",pump:.1,a:"#7bd88f"}),
+    st({name:"Mossy Path",mood:"soft footsteps",key:67,scale:"lydian",bpm:80,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"roots",a:"#9be0a8"}),
+    st({name:"Birdsong",mood:"dawn chorus",key:74,scale:"pentaMaj",bpm:92,lead:"pulse",duty:.25,density:.42,drums:"chill",bass:"bounce",a:"#aee6b0",vary:true}),
+    st({name:"Canopy",mood:"dappled light",key:69,scale:"lydian",bpm:84,lead:"pulse",duty:.2,density:.38,drums:"chill",bass:"pad",a:"#7bd88f"}),
+    st({name:"Fern Hollow",mood:"green shade",key:66,scale:"dorian",bpm:76,lead:"pulse",duty:.2,density:.34,drums:"sparse",bass:"pad",a:"#5fb87a"}),
+    st({name:"Sunbeam",mood:"warm clearing",key:71,scale:"major",bpm:90,lead:"pulse",duty:.25,density:.44,drums:"chill",bass:"bounce",pump:.1,a:"#aee6b0"}),
+    st({name:"Brook",mood:"trickling stream",key:73,scale:"pentaMaj",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",a:"#7be0c0"}),
+    st({name:"Wildflower",mood:"meadow breeze",key:68,scale:"lydian",bpm:86,lead:"pulse",duty:.25,density:.42,drums:"chill",bass:"bounce",a:"#9be0a8"}),
+    st({name:"Old Oak",mood:"ancient calm",key:64,scale:"dorian",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#5fb87a"}),
+    st({name:"Meadowlark",mood:"open field",key:72,scale:"pentaMaj",bpm:94,lead:"pulse",duty:.25,density:.46,drums:"chill",bass:"bounce",pump:.12,a:"#aee6b0"}),
+    st({name:"Pinewood",mood:"resin air",key:67,scale:"lydian",bpm:78,lead:"pulse",duty:.2,density:.36,drums:"chill",bass:"roots",a:"#7bd88f"}),
+    st({name:"Firefly",mood:"dusk glow",key:70,scale:"pentaMaj",bpm:74,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#bfe6a0"}),
+    st({name:"Glade",mood:"hidden opening",key:69,scale:"lydian",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"bounce",a:"#9be0a8"}),
+    st({name:"Acorn",mood:"playful skip",key:74,scale:"pentaMaj",bpm:96,lead:"pulse",duty:.25,density:.46,drums:"chill",bass:"bounce",pump:.1,a:"#aee6b0"}),
+    st({name:"Treetops",mood:"high + airy",key:76,scale:"lydian",bpm:80,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#7be0c0"}),
+  ],
+  space:[
+    st({name:"Event Horizon",mood:"edge of dark",key:62,scale:"minor",bpm:64,lead:"pulse",duty:.125,density:.28,drums:"sparse",bass:"pad",pump:.06,a:"#b18cff"}),
+    st({name:"Nebula",mood:"glowing clouds",key:67,scale:"lydian",bpm:60,lead:"pulse",duty:.125,density:.26,drums:"sparse",bass:"pad",a:"#9a7bff",vary:true}),
+    st({name:"Cold Orbit",mood:"slow rotation",key:64,scale:"pentaMaj",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#7c6bff",prog:PC}),
+    st({name:"Stardrift",mood:"weightless",key:71,scale:"lydian",bpm:62,lead:"pulse",duty:.125,density:.26,drums:"sparse",bass:"pad",a:"#c8a0ff"}),
+    st({name:"Gravity Well",mood:"deep pull",key:59,scale:"minor",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#8c7bff"}),
+    st({name:"Ion Trail",mood:"engine glow",key:69,scale:"pentaMaj",bpm:70,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#a08cff"}),
+    st({name:"Pale Blue Dot",mood:"lonely + vast",key:67,scale:"lydian",bpm:58,lead:"pulse",duty:.125,density:.24,drums:"sparse",bass:"pad",a:"#8ab0ff"}),
+    st({name:"Lightyears",mood:"long voyage",key:65,scale:"minor",bpm:64,lead:"pulse",duty:.125,density:.28,drums:"sparse",bass:"pad",a:"#b18cff"}),
+    st({name:"Void",mood:"absolute quiet",key:60,scale:"minor",bpm:56,lead:"pulse",duty:.125,density:.22,drums:"sparse",bass:"pad",a:"#7c6bff"}),
+    st({name:"Solar Wind",mood:"charged drift",key:72,scale:"lydian",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#c0a0ff"}),
+    st({name:"Cryosleep",mood:"frozen dream",key:64,scale:"pentaMaj",bpm:60,lead:"pulse",duty:.125,density:.26,drums:"sparse",bass:"pad",a:"#9ab0ff"}),
+    st({name:"Andromeda",mood:"distant spiral",key:69,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#b18cff"}),
+    st({name:"Black Hole",mood:"crushing calm",key:57,scale:"phryg",bpm:62,lead:"pulse",duty:.125,density:.28,drums:"sparse",bass:"pad",a:"#8c6bff"}),
+    st({name:"Comet",mood:"streaking by",key:71,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#c8b0ff"}),
+    st({name:"Deep Field",mood:"a thousand suns",key:67,scale:"lydian",bpm:58,lead:"pulse",duty:.125,density:.24,drums:"sparse",bass:"pad",a:"#a890ff"}),
+  ],
+  dungeon:[
+    st({name:"Torchlight",mood:"first descent",key:60,scale:"dorian",bpm:96,lead:"pulse",duty:.2,density:.44,drums:"backbeat",bass:"roots",pump:.16,a:"#ff9a3c"}),
+    st({name:"Crypt",mood:"cold stone",key:57,scale:"phryg",bpm:88,lead:"pulse",duty:.2,density:.4,drums:"backbeat",bass:"roots",a:"#ff7a2c"}),
+    st({name:"Goblin Warren",mood:"skittering",key:62,scale:"dorian",bpm:116,lead:"pulse",duty:.25,density:.6,drums:"four",bass:"drive",pump:.2,a:"#ffb45a",vary:true}),
+    st({name:"Dragon's Lair",mood:"vast + deadly",key:55,scale:"phryg",bpm:108,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.24,a:"#ff7a2c"}),
+    st({name:"Cursed Hall",mood:"haunted echo",key:59,scale:"minor",bpm:84,lead:"pulse",duty:.2,density:.4,drums:"backbeat",bass:"roots",a:"#ff9a3c"}),
+    st({name:"Mana Well",mood:"arcane hum",key:64,scale:"dorian",bpm:92,lead:"pulse",duty:.25,density:.46,drums:"backbeat",bass:"bounce",a:"#ffc070"}),
+    st({name:"Iron Gate",mood:"heavy threshold",key:56,scale:"phryg",bpm:100,lead:"saw",density:.56,drums:"four",bass:"drive",pump:.22,a:"#ff8a3a"}),
+    st({name:"Catacombs",mood:"endless tunnels",key:58,scale:"minor",bpm:90,lead:"pulse",duty:.2,density:.42,drums:"backbeat",bass:"roots",a:"#ff9a3c"}),
+    st({name:"Bone Pit",mood:"rattling depths",key:60,scale:"phryg",bpm:112,lead:"pulse",duty:.25,density:.58,drums:"four",bass:"drive",pump:.2,a:"#ffb45a"}),
+    st({name:"Wizard's Tower",mood:"spiral ascent",key:67,scale:"dorian",bpm:104,lead:"pulse",duty:.25,density:.5,drums:"backbeat",bass:"bounce",pump:.16,a:"#ffc070"}),
+    st({name:"Trapdoor",mood:"sudden drop",key:59,scale:"minor",bpm:120,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.24,a:"#ff7a2c"}),
+    st({name:"Mimic",mood:"it was a chest",key:62,scale:"phryg",bpm:114,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.22,a:"#ff9a3c"}),
+    st({name:"Lich",mood:"undying dread",key:55,scale:"phryg",bpm:96,lead:"saw",density:.56,drums:"backbeat",bass:"drive",pump:.2,a:"#ff8a3a"}),
+    st({name:"Rune Door",mood:"puzzle chamber",key:65,scale:"dorian",bpm:88,lead:"pulse",duty:.2,density:.42,drums:"backbeat",bass:"roots",a:"#ffc070"}),
+    st({name:"Boss Chamber",mood:"final stand",key:57,scale:"phryg",bpm:124,lead:"saw",density:.72,drums:"four",bass:"drive",pump:.26,a:"#ff7a2c"}),
   ],
 };
 let sectionKey="pixel";
 let STATIONS=SECTIONS[sectionKey];
 
-const mtof = m => 440*Math.pow(2,(m-69)/12);
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-const clamp=(v,a,b)=>v<a?a:v>b?b:v;
-function scaleNotes(st){ const sc=SCALES[st.scale],out=[]; for(let m=st.key-4;m<=st.key+18;m++){ const pc=((m-st.key)%12+12)%12; if(sc.includes(pc)) out.push(m);} return out; }
+function scaleNotes(s){ const sc=SCALES[s.scale],out=[]; for(let m=s.key-4;m<=s.key+18;m++){ const pc=((m-s.key)%12+12)%12; if(sc.includes(pc)) out.push(m);} return out; }
 function nearestIdx(arr,m){ let bi=0,bd=1e9; for(let i=0;i<arr.length;i++){const d=Math.abs(arr[i]-m);if(d<bd){bd=d;bi=i;}} return bi; }
-function chordTones(st,bar){ const sc=SCALES[st.scale],deg=st.prog[bar%st.prog.length],out=[];
-  for(const k of [0,2,4]){ const si=deg+k,oct=Math.floor(si/sc.length),pc=sc[((si%sc.length)+sc.length)%sc.length]; out.push(st.key+oct*12+pc);} return out; }
-
-/* melody: AABA-ish phrase, smoothed (mostly stepwise, legato note lengths) */
-function genMelody(st,rng){
-  const notes=scaleNotes(st), idx=new Array(16*BARS).fill(null);
-  let cur=nearestIdx(notes,st.key);
-  function bar(b){ const ct=chordTones(st,b).map(m=>nearestIdx(notes,m+12<=notes[notes.length-1]?m+12:m));
-    for(let s=0;s<16;s++){ const strong=(s%4===0),med=(s%2===0);
-      const p=strong?.96:med?(.3+st.density*.55):(st.density*.5);
-      if(rng()<p){
-        if(strong){ let best=ct[0],bd=1e9; for(const i of ct){const d=Math.abs(i-cur);if(d<bd){bd=d;best=i;}} if(rng()<.3)best=ct[(rng()*ct.length)|0]; cur=best; }
+function chordTones(s,bar){ const sc=SCALES[s.scale],deg=s.prog[bar%s.prog.length],out=[];
+  for(const k of [0,2,4]){ const si=deg+k,oct=Math.floor(si/sc.length),pc=sc[((si%sc.length)+sc.length)%sc.length]; out.push(s.key+oct*12+pc);} return out; }
+function genMelody(s,rng){
+  const notes=scaleNotes(s), idx=new Array(16*BARS).fill(null); let cur=nearestIdx(notes,s.key);
+  function bar(b){ const ct=chordTones(s,b).map(m=>nearestIdx(notes,m+12<=notes[notes.length-1]?m+12:m));
+    for(let p=0;p<16;p++){ const strong=(p%4===0),med=(p%2===0); const pr=strong?.96:med?(.3+s.density*.55):(s.density*.5);
+      if(rng()<pr){ if(strong){ let best=ct[0],bd=1e9; for(const i of ct){const d=Math.abs(i-cur);if(d<bd){bd=d;best=i;}} if(rng()<.3)best=ct[(rng()*ct.length)|0]; cur=best; }
         else{ const r=rng(); if(r<.62)cur+=rng()<.5?1:-1; else if(r<.82)cur+=rng()<.5?2:-2; else cur=ct[(rng()*ct.length)|0]; }
-        cur=clamp(cur,0,notes.length-1); idx[b*16+s]=cur;
-      }
-    }
-  }
-  bar(0); bar(1);
-  const d2=st.prog[2]-st.prog[0], d3=st.prog[3]-st.prog[1];
-  for(let s=0;s<16;s++) idx[32+s]= idx[s]==null?null:clamp(idx[s]+d2,0,notes.length-1);
-  for(let s=0;s<16;s++){ const base=idx[16+s]==null?null:idx[16+s]+d3; idx[48+s]= base==null?null:clamp(base,0,notes.length-1); }
-  idx[60]=null; idx[61]=null; idx[62]=null; idx[63]=nearestIdx(notes,st.key);
-  // to {m,len} with legato length = steps until next note (cap 4)
+        cur=clamp(cur,0,notes.length-1); idx[b*16+p]=cur; } } }
+  bar(0); bar(1); const d2=s.prog[2]-s.prog[0], d3=s.prog[3]-s.prog[1];
+  for(let p=0;p<16;p++) idx[32+p]= idx[p]==null?null:clamp(idx[p]+d2,0,notes.length-1);
+  for(let p=0;p<16;p++){ const base=idx[16+p]==null?null:idx[16+p]+d3; idx[48+p]= base==null?null:clamp(base,0,notes.length-1); }
+  idx[60]=null; idx[61]=null; idx[62]=null; idx[63]=nearestIdx(notes,s.key);
   const out=new Array(64).fill(null);
-  for(let s=0;s<64;s++){ if(idx[s]==null)continue; let len=1; while(len<4 && idx[(s+len)%64]==null && (s+len)<64) len++; out[s]={m:notes[idx[s]],len}; }
+  for(let p=0;p<64;p++){ if(idx[p]==null)continue; let len=1; while(len<4 && idx[(p+len)%64]==null && (p+len)<64) len++; out[p]={m:notes[idx[p]],len}; }
   return out;
 }
 const DRUMS={
@@ -342,84 +496,74 @@ const DRUMS={
 };
 
 /* ============================================================ AUDIO */
-let ctx=null, master=null, masterLP=null, comp=null, analyser=null, freqData=null, timeData=null, pulseCache={};
-let bus=null;                 // per-song bus (swapped on station change → no overlap)
-let playing=false, timer=null, curStep=0, nextTime=0, loopN=0, mel=[], salt=0;
-let station=STATIONS[0], volume=.62, beatTimes=[];
-const AHEAD=1.3;              // big lookahead → smooth even when the tab is backgrounded
+let ctx=null, master=null, comp=null, analyser=null, freqData=null, timeData=null, pulseCache={};
+let bus=null, playing=false, timer=null, curStep=0, nextTime=0, loopN=0, mel=[], salt=0;
+let station=STATIONS[0], volume=.62, beatTimes=[]; const AHEAD=1.3;
 
 function pulseWave(duty){ if(pulseCache[duty])return pulseCache[duty];
   const n=28, real=new Float32Array(n+1), imag=new Float32Array(n+1);
   for(let i=1;i<=n;i++) imag[i]=(2/(i*Math.PI))*Math.sin(i*Math.PI*duty);
   return pulseCache[duty]=ctx.createPeriodicWave(real,imag,{disableNormalization:false}); }
-
+function distCurve(k){ const n=1024,c=new Float32Array(n); for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); } return c; }
 function ensureAudio(){ if(ctx)return;
   ctx=new (window.AudioContext||window.webkitAudioContext)();
   master=ctx.createGain(); master.gain.value=volume;
   comp=ctx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3; comp.attack.value=.004; comp.release.value=.2;
   analyser=ctx.createAnalyser(); analyser.fftSize=1024; analyser.smoothingTimeConstant=.82;
   freqData=new Uint8Array(analyser.frequencyBinCount); timeData=new Uint8Array(analyser.fftSize);
-  master.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination); // no master lowpass — full brightness
-}
-function distCurve(k){ const n=1024,c=new Float32Array(n); for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); } return c; }
+  master.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination); }
 function buildBus(){
-  const b=ctx.createGain(); b.gain.value=1;
-  const pump=ctx.createGain(); pump.gain.value=1;            // sidechain duck node
+  const b=ctx.createGain(); b.gain.value=1; const pump=ctx.createGain(); pump.gain.value=1;
   const d=ctx.createDelay(1.0); d.delayTime.value=(60/station.bpm)/2;
-  const f=ctx.createGain(); f.gain.value=.32; const w=ctx.createGain(); w.gain.value=.26;
+  const f=ctx.createGain(); f.gain.value= fx().longpad?.42:.32; const w=ctx.createGain(); w.gain.value= fx().longpad?.34:.26;
   d.connect(f); f.connect(d); d.connect(w); w.connect(b);
-  if(sectionKey==="cyber"){ const sh=ctx.createWaveShaper(); sh.curve=distCurve(4.2); sh.oversample="2x";
-    const tame=ctx.createGain(); tame.gain.value=.82; b.connect(sh); sh.connect(tame); tame.connect(pump); }  // industrial grit on the whole cyber mix
+  if(fx().grit){ const sh=ctx.createWaveShaper(); sh.curve=distCurve(fx().grit); sh.oversample="2x";
+    const tame=ctx.createGain(); tame.gain.value=.95; b.connect(sh); sh.connect(tame); tame.connect(pump); }  // gentle glue grit
   else b.connect(pump);
-  pump.connect(master);
-  return {b,d,pump};
-}
+  pump.connect(master); return {b,d,pump}; }
 function swapBus(){ if(bus){ const o=bus, t=ctx.currentTime;
     o.b.gain.cancelScheduledValues(t); o.b.gain.setValueAtTime(o.b.gain.value,t); o.b.gain.linearRampToValueAtTime(.0001,t+.05);
     setTimeout(()=>{try{o.b.disconnect();o.pump.disconnect();o.d.disconnect();}catch(e){}},420); }
   bus=buildBus(); }
-
 function env(g,t,dur,peak,sus){ peak=Math.max(.0001,peak); sus=Math.max(.0001,sus*peak);
   g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(peak,t+.008);
   g.gain.exponentialRampToValueAtTime(sus,t+Math.min(dur*.5,.14));
   g.gain.setValueAtTime(sus,t+Math.max(dur*.6,.15)); g.gain.exponentialRampToValueAtTime(.0001,t+dur); }
-
 function lead(midi,t,dur,vol){
-  const g=ctx.createGain(); env(g,t,dur,vol,.6);
-  if(station.lead==="saw"){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=9000; lp.Q.value=.4;
+  const g=ctx.createGain(); env(g,t,dur,vol,.6); const F=fx();
+  if(station.lead==="saw"){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=F.leadLP||9000; lp.Q.value=.4;
     [-9,-4,0,4,9].forEach(dt=>{ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=mtof(midi); o.detune.value=dt; o.connect(lp); o.start(t); o.stop(t+dur+.05); });
     lp.connect(g); }
-  else{ const o=ctx.createOscillator(); o.setPeriodicWave(pulseWave(station.duty)); o.frequency.value=mtof(midi);
-    const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=5.4; lg.gain.value=station.vib; lfo.connect(lg).connect(o.detune); lfo.start(t); lfo.stop(t+dur+.05);
-    o.connect(g); }                          // pulse leads run unfiltered = bright original character
-  g.connect(bus.b); g.connect(bus.d);
-}
+  else{ const o=ctx.createOscillator(); o.setPeriodicWave(pulseWave(F.square?.5:station.duty)); o.frequency.value=mtof(midi);
+    if(!F.square){ const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=5.4; lg.gain.value=F.chorus?station.vib*2.4:station.vib; lfo.connect(lg).connect(o.detune); lfo.start(t); lfo.stop(t+dur+.05); }
+    if(F.chorus){ const o2=ctx.createOscillator(); o2.setPeriodicWave(pulseWave(.25)); o2.frequency.value=mtof(midi); o2.detune.value=8; const g2=ctx.createGain(); g2.gain.value=.5; o2.connect(g2).connect(g); o2.start(t); o2.stop(t+dur+.05); }
+    if(F.leadLP){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=F.leadLP; o.connect(lp); lp.connect(g); }
+    else o.connect(g); }
+  g.connect(bus.b); g.connect(bus.d); }
 function pluck(midi,t,vol){ const o=ctx.createOscillator(); o.type=station.lead==="saw"?"sawtooth":"triangle"; o.frequency.value=mtof(midi);
   const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.setValueAtTime(4400,t); lp.frequency.exponentialRampToValueAtTime(900,t+.18);
   const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
   o.connect(lp).connect(g); g.connect(bus.b); g.connect(bus.d); o.start(t); o.stop(t+.24); }
 function bass(midi,t,dur,vol){
-  if(sectionKey==="cyber"){                                  // gritty detuned "reese" + sub octave = cyberpunk low end
-    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1500; lp.Q.value=2.4;
-    const g=ctx.createGain(); env(g,t,dur,vol*1.12,.85);
+  if(fx().reese){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1500; lp.Q.value=1.8;
+    const g=ctx.createGain(); env(g,t,dur,vol*1.05,.85);
     [-14,-7,0,7,14].forEach(dt=>{ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=mtof(midi); o.detune.value=dt; o.connect(lp); o.start(t); o.stop(t+dur+.05); });
     const sub=ctx.createOscillator(); sub.type="sine"; sub.frequency.value=mtof(midi-12); const sg=ctx.createGain(); sg.gain.value=.55; sub.connect(sg).connect(g); sub.start(t); sub.stop(t+dur+.05);
-    lp.connect(g); g.connect(bus.b); return;
-  }
+    lp.connect(g); g.connect(bus.b); return; }
   const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=mtof(midi);
   const o2=ctx.createOscillator(); o2.type="square"; o2.frequency.value=mtof(midi); const g2=ctx.createGain(); g2.gain.value=.14;
   const g=ctx.createGain(); env(g,t,dur,vol,.8); o.connect(g); o2.connect(g2).connect(g); g.connect(bus.b);
   o.start(t);o2.start(t);o.stop(t+dur+.04);o2.stop(t+dur+.04); }
-function pad(tones,t,dur,vol){ const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=950;
+function pad(tones,t,dur,vol){ const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=fx().longpad?700:950;
   const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*.3);
   g.gain.setValueAtTime(vol,t+dur*.6); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   tones.forEach((m,i)=>{ const o=ctx.createOscillator(); o.type=i===1?"sine":"triangle"; o.frequency.value=mtof(m); o.detune.value=(i-1)*6; o.connect(f); o.start(t); o.stop(t+dur+.05); });
   f.connect(g).connect(bus.b); }
-function noiseSrc(dur){ const b=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate),d=b.getChannelData(0);
+function noiseSrc(dur){ const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1; const s=ctx.createBufferSource(); s.buffer=b; return s; }
 function kick(t){ const o=ctx.createOscillator(),g=ctx.createGain(); o.type="sine";
   o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(46,t+.13);
-  g.gain.setValueAtTime(.9,t); g.gain.exponentialRampToValueAtTime(.0001,t+.18); o.connect(g).connect(master); o.start(t);o.stop(t+.2); } // kick bypasses pump (stays solid)
+  g.gain.setValueAtTime(.9,t); g.gain.exponentialRampToValueAtTime(.0001,t+.18); o.connect(g).connect(master); o.start(t);o.stop(t+.2); }
 function snare(t){ const s=noiseSrc(.2),f=ctx.createBiquadFilter(),g=ctx.createGain(); f.type="highpass"; f.frequency.value=1500;
   g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.0001,t+.16); s.connect(f).connect(g).connect(bus.b); s.start(t);s.stop(t+.2);
   const o=ctx.createOscillator(),og=ctx.createGain(); o.type="triangle"; o.frequency.setValueAtTime(330,t); o.frequency.exponentialRampToValueAtTime(180,t+.1);
@@ -427,128 +571,189 @@ function snare(t){ const s=noiseSrc(.2),f=ctx.createBiquadFilter(),g=ctx.createG
 function hat(t,open){ const s=noiseSrc(open?.12:.05),f=ctx.createBiquadFilter(),g=ctx.createGain(); f.type="highpass"; f.frequency.value=7200;
   g.gain.setValueAtTime(open?.22:.16,t); g.gain.exponentialRampToValueAtTime(.0001,t+(open?.12:.05)); s.connect(f).connect(g).connect(bus.b); s.start(t);s.stop(t+.14); }
 
-function bassFor(st,step,bar){ const root=chordTones(st,bar)[0]-24, fifth=root+7, s=step%16;
-  switch(st.bass){
-    case "roots":  return s===0?root:s===8?fifth:null;
-    case "pad":    return s===0?root:null;
-    case "bounce": return (s%2===0)?(s===8?fifth:root):null;
-    case "drive":  return (s%4===0)?(s===12?fifth:root):(s===14?root:null);
-    default:       return s===0?root:null;
-  } }
+/* ---- ambiences (per section): rain bed, vinyl crackle, cosmic drone, droplets/thunder/birds ---- */
+let amb=null;
+function startAmbience(){ stopAmbience(); if(!ctx)return; const type=fx().amb;
+  if(type==="rain") amb=ambRain(); else if(type==="crackle") amb=ambCrackle(); else if(type==="drone") amb=ambDrone(); }
+function stopAmbience(){ if(!amb)return; const o=amb; amb=null;
+  try{ o.g.gain.cancelScheduledValues(ctx.currentTime); o.g.gain.setValueAtTime(Math.max(.0001,o.g.gain.value),ctx.currentTime); o.g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.6); }catch(e){}
+  setTimeout(()=>{ try{o.nodes.forEach(n=>{try{n.stop&&n.stop();}catch(e){} try{n.disconnect();}catch(e){}});}catch(e){} },700); }
+function ambRain(){ const src=ctx.createBufferSource(); const len=Math.floor(ctx.sampleRate*2),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1; src.buffer=buf; src.loop=true;
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=900;
+  const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600; bp.Q.value=.5;
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(Math.max(.0005,station.rainLvl),ctx.currentTime+1.4);
+  const lfo=ctx.createOscillator(); lfo.frequency.value=.16; const lg=ctx.createGain(); lg.gain.value=.012; lfo.connect(lg).connect(g.gain);
+  src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(master); src.start(); lfo.start();
+  return {g,nodes:[src,lfo]}; }
+function ambCrackle(){ const src=ctx.createBufferSource(); const len=Math.floor(ctx.sampleRate*2),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1; src.buffer=buf; src.loop=true;
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=3000;
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.015,ctx.currentTime+1.0);
+  src.connect(hp); hp.connect(g); g.connect(master); src.start(); return {g,nodes:[src]}; }
+function ambDrone(){ const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.05,ctx.currentTime+2.0);
+  const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=520; const root=mtof(station.key-24); const ns=[];
+  [0,7,12].forEach((iv,i)=>{ const o=ctx.createOscillator(); o.type=i===1?"sine":"triangle"; o.frequency.value=root*Math.pow(2,iv/12); o.detune.value=(i-1)*7; o.connect(f); o.start(); ns.push(o); });
+  f.connect(g); g.connect(master); return {g,nodes:ns}; }
+function setRainLevel(){ if(amb&&fx().amb==="rain"){ try{ amb.g.gain.cancelScheduledValues(ctx.currentTime); amb.g.gain.setValueAtTime(Math.max(.0001,amb.g.gain.value),ctx.currentTime); amb.g.gain.exponentialRampToValueAtTime(Math.max(.0005,station.rainLvl),ctx.currentTime+1.0);}catch(e){} } }
+function droplet(t){ const o=ctx.createOscillator(); o.type="sine"; const f=900+Math.random()*1700;
+  o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.7,t+.08);
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.03,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+.12);
+  o.connect(g).connect(master); o.start(t); o.stop(t+.14); }
+function thunder(t,lvl){ const s=noiseSrc(2.4),lp=ctx.createBiquadFilter(),g=ctx.createGain(); lp.type="lowpass"; lp.frequency.value=150; lp.Q.value=.6;
+  g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(lvl||.05,t+.6); g.gain.exponentialRampToValueAtTime(.0001,t+2.2);
+  s.connect(lp).connect(g).connect(master); s.start(t); s.stop(t+2.4); }
+function bird(t){ const o=ctx.createOscillator(); o.type="sine"; const f=2400+Math.random()*1400;
+  o.frequency.setValueAtTime(f,t); o.frequency.linearRampToValueAtTime(f*1.18,t+.05); o.frequency.linearRampToValueAtTime(f*.9,t+.12);
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.025,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  o.connect(g).connect(master); o.start(t); o.stop(t+.18);
+  if(Math.random()<.6){ bird(t+.16+Math.random()*.1); } }
 
-function regen(){ const rng=mulberry32((station.key*131+station.bpm*17+(loopN%station.loops)*2654435761+salt)>>>0); mel=genMelody(station,rng); }
-
+function bassFor(s,step,bar){ const root=chordTones(s,bar)[0]-24, fifth=root+7, q=step%16;
+  switch(s.bass){ case "roots":return q===0?root:q===8?fifth:null; case "pad":return q===0?root:null;
+    case "bounce":return (q%2===0)?(q===8?fifth:root):null; case "drive":return (q%4===0)?(q===12?fifth:root):(q===14?root:null); default:return q===0?root:null; } }
+function regen(){ const v=station.vary?loopN:(loopN%station.loops); const rng=mulberry32((station.key*131+station.bpm*17+v*2654435761+salt)>>>0); mel=genMelody(station,rng); }
 function playStep(step,t){
   const bar=Math.floor(step/16)%BARS, s=step%16;
   if(step%(16*BARS)===0){ regen(); loopN++; }
-  // sidechain pump + visual beat — fires reliably on every quarter note
   if(s%4===0 && bus){ const g=bus.pump.gain, beat=60/station.bpm;
     g.cancelScheduledValues(t); g.setValueAtTime(Math.max(.0001,1-station.pump),t); g.linearRampToValueAtTime(1,t+beat*.92);
     beatTimes.push(t); if(beatTimes.length>40)beatTimes.shift(); }
-  if(s===0) pad(chordTones(station,bar),t,(60/station.bpm)/4*15.5,.05);
-  const e=mel[step]; if(e) lead(e.m,t,(60/station.bpm)/4*0.92, station.lead==="saw"?.13:.16); // punchy 16ths, no legato
+  if(s===0) pad(chordTones(station,bar),t,(60/station.bpm)/4*15.5, fx().longpad?.08:.05);
+  const e=mel[step]; if(e) lead(e.m,t,(60/station.bpm)/4*0.92, station.lead==="saw"?.13:.16);
   if(station.arp){ const ct=chordTones(station,bar); const an=ct[s%ct.length]+12+(s>=8?12:0); pluck(an,t,.045); }
   const bm=bassFor(station,step,bar); if(bm!=null) bass(bm,t,(60/station.bpm)/4*1.7,.15);
   const D=DRUMS[station.drums]||DRUMS.chill;
   if(D.k[s]) kick(t); if(D.s[s]) snare(t); if(D.h[s]) hat(t, s%8===6);
+  if(sectionKey==="rain"){ if(Math.random()<.05) droplet(t+Math.random()*(60/station.bpm)/4); if(station.thunder && s===0 && Math.random()<.18) thunder(t, station.name==="Downpour"?.07:.035); }
+  if(sectionKey==="forest" && s===0 && Math.random()<.5) bird(t+Math.random()*(60/station.bpm));
 }
-function scheduler(){
-  if(nextTime < ctx.currentTime-0.25) nextTime=ctx.currentTime+0.05;   // drop backlog after a long background freeze
+function scheduler(){ if(nextTime < ctx.currentTime-0.25) nextTime=ctx.currentTime+0.05;
   const sixteenth=(60/station.bpm)/4;
-  while(nextTime < ctx.currentTime+AHEAD){
-    let t=nextTime; if(curStep%2===1 && station.drums==="swing") t+=sixteenth*0.32;
-    playStep(curStep,t); nextTime+=sixteenth; curStep=(curStep+1)%(16*BARS);
-  }
-}
+  while(nextTime < ctx.currentTime+AHEAD){ let t=nextTime; if(curStep%2===1 && station.drums==="swing") t+=sixteenth*0.32;
+    playStep(curStep,t); nextTime+=sixteenth; curStep=(curStep+1)%(16*BARS); } }
 function start(){ ensureAudio(); if(ctx.state==="suspended")ctx.resume(); if(playing)return;
   playing=true; curStep=0; loopN=0; beatTimes=[]; swapBus(); nextTime=ctx.currentTime+0.08; regen();
   master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setValueAtTime(.0001,ctx.currentTime);
   master.gain.exponentialRampToValueAtTime(volume,ctx.currentTime+0.5);
-  timer=setInterval(scheduler,120); setUI(); }
-function stop(){ if(!playing)return; playing=false; clearInterval(timer); timer=null;
-  if(master) master.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+0.25); setUI(); }
+  timer=setInterval(scheduler,120); startAmbience(); try{$("silent").play().catch(()=>{});}catch(e){} setUI(); updateMedia(); }
+function stop(){ if(!playing)return; playing=false; clearInterval(timer); timer=null; stopAmbience();
+  if(master) master.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+0.25); try{$("silent").pause();}catch(e){} setUI(); updateMedia(); }
 function setStation(i){ station=STATIONS[(i+STATIONS.length)%STATIONS.length]; salt=0;
-  applyTheme(); curStep=0; loopN=0; beatTimes=[]; if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); } renderList(); setUI(); }
+  applyTheme(); curStep=0; loopN=0; beatTimes=[]; if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); setRainLevel(); } renderList(); setUI(); updateMedia(); }
 function shuffle(){ salt=(salt+0x9e3779b1)>>>0; curStep=0; if(playing){ swapBus(); nextTime=ctx.currentTime+0.04; regen(); } flash(); }
+function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
+  document.body.dataset.skin=key; renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
+  salt=0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI(); fxReset();
+  if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); startAmbience(); } updateMedia(); }
+
+/* ============================================================ MEDIA KEYS (AirPods / hardware) */
+function silentWavURI(){ const sr=8000,n=sr,buf=new ArrayBuffer(44+n*2),v=new DataView(buf),W=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  W(0,"RIFF");v.setUint32(4,36+n*2,true);W(8,"WAVE");W(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);W(36,"data");v.setUint32(40,n*2,true);
+  let bin=""; const by=new Uint8Array(buf); for(let i=0;i<by.length;i++) bin+=String.fromCharCode(by[i]); return "data:audio/wav;base64,"+btoa(bin); }
+function setupMedia(){ try{ $("silent").src=silentWavURI(); $("silent").volume=0; }catch(e){}
+  if(!("mediaSession" in navigator))return; const M=navigator.mediaSession;
+  M.setActionHandler("play",()=>{ if(!playing)start(); });
+  M.setActionHandler("pause",()=>{ if(playing)stop(); });
+  M.setActionHandler("nexttrack",()=>{ setStation(STATIONS.indexOf(station)+1); if(!playing)start(); });
+  M.setActionHandler("previoustrack",()=>{ setStation(STATIONS.indexOf(station)-1); if(!playing)start(); }); }
+function updateMedia(){ if(!("mediaSession" in navigator))return; try{
+  navigator.mediaSession.metadata=new MediaMetadata({title:station.name, artist:"GRINDWAVE · "+SECTION_META[sectionKey].label, album:station.mood});
+  navigator.mediaSession.playbackState=playing?"playing":"paused"; }catch(e){} }
 
 /* ============================================================ UI / VISUALS */
 const $=id=>document.getElementById(id);
-function applyTheme(){ document.documentElement.style.setProperty('--accent',station.a); document.documentElement.style.setProperty('--accent2',station.b); }
+function applyTheme(){ const F=SKIN_ACCENT[sectionKey]; const a=F?F[0]:station.a, b=F?F[1]:station.b;
+  document.documentElement.style.setProperty('--accent',a); document.documentElement.style.setProperty('--accent2',b); }
 function fmtTime(sec){ sec=Math.round(sec); return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0"); }
 function songLen(s){ return s.loops*16*60/s.bpm; }
+function renderTabs(){ const T=$("tabs"); T.innerHTML="";
+  SECTION_ORDER.forEach(k=>{ const b=document.createElement("button"); b.className="tab"+(k===sectionKey?" active":""); b.dataset.skin=k;
+    b.textContent="▚ "+SECTION_META[k].label; b.setAttribute("data-tip", SECTION_META[k].label+" · "+SECTION_META[k].tip);
+    b.onclick=()=>setSection(k); T.appendChild(b); }); }
 function renderList(){ const L=$("list"); L.innerHTML="";
   STATIONS.forEach((s,i)=>{ const r=document.createElement("div"); r.className="row"+(s===station?" active":"");
-    r.innerHTML=`<span class="dot" style="background:${s.a};color:${s.a}"></span>
-      <span class="nm">${i+1}. ${s.name}</span>
-      <span class="eq"><i></i><i></i><i></i></span>
-      <span class="dur">${fmtTime(songLen(s))}</span><span class="meta">${s.bpm}</span>`;
+    r.innerHTML=`<span class="dot" style="background:${s.a};color:${s.a}"></span><span class="nm">${i+1}. ${s.name}</span><span class="eq"><i></i><i></i><i></i></span><span class="dur">${fmtTime(songLen(s))}</span><span class="meta">${s.bpm}</span>`;
     r.setAttribute("data-tip", `${s.name} — ${s.mood} · ${fmtTime(songLen(s))}`);
-    r.onclick=()=>{ setStation(i); if(!playing)start(); }; L.appendChild(r); });
-}
+    r.onclick=()=>{ setStation(i); if(!playing)start(); }; L.appendChild(r); }); }
 function setUI(){ $("npTitle").textContent=station.name; $("npMood").textContent=station.mood;
-  $("chips").innerHTML=`<span class="chip">KEY <b>${noteName(station.key)}</b></span>
-    <span class="chip">SCALE <b>${station.scale}</b></span>
-    <span class="chip">TEMPO <b>${station.bpm}</b></span>
-    <span class="chip">LEN <b>${fmtTime(songLen(station))}</b></span>`;
+  $("chips").innerHTML=`<span class="chip">KEY <b>${noteName(station.key)}</b></span><span class="chip">SCALE <b>${station.scale}</b></span><span class="chip">TEMPO <b>${station.bpm}</b></span><span class="chip">LEN <b>${fmtTime(songLen(station))}</b></span>`;
   $("play").textContent=playing?"⏸":"▶"; $("pstat").textContent=playing?"ON AIR":"STANDBY";
-  document.querySelectorAll(".row").forEach((r,i)=>r.classList.toggle("active",STATIONS[i]===station));
-}
+  document.querySelectorAll(".row").forEach((r,i)=>r.classList.toggle("active",STATIONS[i]===station)); }
 function noteName(m){ const N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]; return N[((m%12)+12)%12]+(Math.floor(m/12)-1); }
 function flash(){ document.documentElement.style.setProperty('--glow','60px'); setTimeout(()=>document.documentElement.style.setProperty('--glow','0px'),170); }
 
-/* always-on subtle focus vignette — stays while you're away, settles when you return */
-const vig=$("vig"); const VIG_BASE=0.1, VIG_AWAY=0.4;
-vig.style.opacity=VIG_BASE;
-function vigAway(){ vig.style.transition='none'; vig.style.opacity=VIG_AWAY; }
-function vigSettle(){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ vig.style.transition='opacity 1.9s ease'; vig.style.opacity=VIG_BASE; })); }
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){ vigAway(); if(ctx&&playing&&ctx.state==='running') ctx.suspend(); }   // stop the music in a hidden/background tab
-  else { vigSettle(); if(ctx&&playing&&ctx.state==='suspended') ctx.resume(); }              // resume when you come back
-});
+/* vignette — subtle always; bigger when the window/tab is NOT selected; music keeps playing */
+const vig=$("vig");
+function vigAway(){ vig.classList.add('big'); vig.style.opacity='.55'; }
+function vigHome(){ vig.classList.remove('big'); vig.style.opacity='.1'; }
+document.addEventListener('visibilitychange',()=>{ document.hidden?vigAway():vigHome(); });
 window.addEventListener('blur', vigAway);
-window.addEventListener('focus', vigSettle);
+window.addEventListener('focus', vigHome);
 
-/* visualizer */
+/* custom cursor */
+const cur=$("cur");
+function initCursor(){ if(document.body.classList.contains("mobile"))return; document.body.style.cursor="none";
+  window.addEventListener("pointermove",e=>{ cur.style.opacity="1"; cur.style.left=e.clientX+"px"; cur.style.top=e.clientY+"px";
+    const hot=e.target&&e.target.closest&&e.target.closest("button,.row,.tab,input,[data-tip]"); cur.classList.toggle("big",!!hot); });
+  window.addEventListener("pointerdown",()=>cur.classList.add("big"));
+  window.addEventListener("pointerup",()=>cur.classList.remove("big"));
+  document.addEventListener("mouseleave",()=>cur.style.opacity="0"); }
+
+/* rolling marquee — original speed, with a clear gap between messages */
+const MQ=[
+  "Every loop is freshly composed. Yes, even the questionable ones.",
+  "No two plays sound the same. We lose sleep so this music doesn't repeat.",
+  "10 stations, 165 songs, exactly 0 of them on Spotify.",
+  "Warning: prolonged listening may cause uncontrollable head-bobbing.",
+  "The rain is fake. Your productivity is real. Probably.",
+  "CYBERPUNK mode: now with 30% less getting arrested.",
+  "FOREST station contains 0% real birds and 100% respect for birds.",
+  "Made by a robot and a human who keeps changing his mind.",
+  "Tip: hit ⟳ the instant a tune gets too comfortable.",
+  "If you can read this, the marquee is working. You're welcome.",
+  "SPACE station: in space, no one can hear you skip a track.",
+];
+function marquee(){ const el=$("mqText"); if(!el)return; let i=0; el.textContent=MQ[0];
+  el.addEventListener("animationiteration",()=>{ el.style.animationPlayState="paused"; i=(i+1)%MQ.length; el.textContent=MQ[i];
+    setTimeout(()=>{ el.style.animationPlayState="running"; }, 1600); }); }
+
+/* visualizer + per-section canvas FX */
 const cv=$("viz"), cx=cv.getContext("2d"); let phase=0;
-function beatPulse(){ if(!ctx) return 0; let p=0; const now=ctx.currentTime;
-  for(const tk of beatTimes){ const dt=now-tk; if(dt>=0&&dt<.6) p=Math.max(p,Math.exp(-dt/.16)); } return p; }
-function draw(){ requestAnimationFrame(draw);
-  const w=cv.width,h=cv.height; cx.clearRect(0,0,w,h);
+let fxRain=[], fxStars=[], fxMtx=[], fxMotes=[], fxReady=false;
+function fxInit(w,h){ fxRain=[]; for(let i=0;i<70;i++) fxRain.push({x:Math.random()*w,y:Math.random()*h,l:6+Math.random()*10,s:3+Math.random()*4});
+  fxStars=[]; for(let i=0;i<80;i++) fxStars.push({x:Math.random()*w,y:Math.random()*h,z:.3+Math.random(),tw:Math.random()*6});
+  fxMtx=[]; for(let i=0;i<Math.floor(w/12);i++) fxMtx.push({y:Math.random()*h,sp:2+Math.random()*4});
+  fxMotes=[]; for(let i=0;i<40;i++) fxMotes.push({x:Math.random()*w,y:Math.random()*h,r:1+Math.random()*2,a:Math.random()*6}); fxReady=true; }
+function fxReset(){ fxReady=false; }
+function secFx(w,h,pulse){ if(!fxReady) fxInit(w,h); const k=sectionKey;
+  if(k==="rain"){ cx.strokeStyle="rgba(170,210,255,.35)"; cx.lineWidth=1; for(const d of fxRain){ cx.beginPath(); cx.moveTo(d.x,d.y); cx.lineTo(d.x-2,d.y+d.l); cx.stroke(); d.y+=d.s+ (playing?2:0); d.x-=.6; if(d.y>h){d.y=-d.l;d.x=Math.random()*w;} } }
+  else if(k==="matrix"){ cx.font="12px monospace"; for(let i=0;i<fxMtx.length;i++){ const m=fxMtx[i],x=i*12+2; cx.fillStyle="rgba(0,255,102,.85)"; cx.fillText(Math.random()<.5?"0":"1",x,m.y); cx.fillStyle="rgba(0,255,102,.25)"; cx.fillText(Math.random()<.5?"0":"1",x,m.y-12); m.y+=m.sp+(playing?2:0); if(m.y>h+12){m.y=-12;m.sp=2+Math.random()*4;} } }
+  else if(k==="cyber"){ cx.fillStyle="rgba(0,0,0,.18)"; for(let y=0;y<h;y+=3) cx.fillRect(0,y,w,1); if(playing&&Math.random()<.04){ const gy=Math.random()*h; cx.fillStyle="rgba(255,230,10,.25)"; cx.fillRect(0,gy,w,2+Math.random()*6); } }
+  else if(k==="space"){ for(const s of fxStars){ const tw=.4+.6*Math.abs(Math.sin(phase*.4+s.tw)); cx.fillStyle="rgba(220,210,255,"+(s.z*tw).toFixed(2)+")"; cx.fillRect(s.x,s.y,s.z*1.6,s.z*1.6); s.x-=s.z*.3*(playing?1.6:1); if(s.x<0){s.x=w;s.y=Math.random()*h;} } }
+  else if(k==="forest"){ for(const m of fxMotes){ cx.fillStyle="rgba(180,240,180,.35)"; cx.beginPath(); cx.arc(m.x,m.y,m.r,0,7); cx.fill(); m.y-=.2; m.x+=Math.sin(phase*.3+m.a)*.3; if(m.y<0){m.y=h;m.x=Math.random()*w;} } }
+  else if(k==="vapor"){ const hy=h*.62; cx.strokeStyle="rgba(255,160,220,.25)"; cx.lineWidth=1; for(let i=0;i<8;i++){ const yy=hy+i*i*1.4; cx.beginPath(); cx.moveTo(0,yy); cx.lineTo(w,yy); cx.stroke(); } cx.fillStyle="rgba(255,180,210,.18)"; cx.beginPath(); cx.arc(w*.5,hy-30,40,0,7); cx.fill(); }
+}
+function beatPulse(){ if(!ctx) return 0; let p=0; const now=ctx.currentTime; for(const tk of beatTimes){ const dt=now-tk; if(dt>=0&&dt<.6) p=Math.max(p,Math.exp(-dt/.16)); } return p; }
+function draw(){ requestAnimationFrame(draw); const w=cv.width,h=cv.height; cx.clearRect(0,0,w,h);
   const pulse = playing?beatPulse():0;
-  // device breathes on the beat
-  $("shell").style.setProperty('--glow',(pulse*26).toFixed(1)+'px');
-  $("led").style.boxShadow=`0 0 ${(8+pulse*16).toFixed(0)}px var(--accent)`;
-  // faint grid
-  cx.globalAlpha=.10; cx.strokeStyle=css('--accent'); for(let x=0;x<w;x+=16){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,h);cx.stroke();}
-  cx.globalAlpha=1;
+  $("shell").style.setProperty('--glow',(pulse*26).toFixed(1)+'px'); $("led").style.boxShadow=`0 0 ${(8+pulse*16).toFixed(0)}px var(--accent)`;
+  secFx(w,h,pulse);
   if(playing&&analyser){ analyser.getByteFrequencyData(freqData); analyser.getByteTimeDomainData(timeData); }
-  // spectrum bars (pixel blocks), baseline nudged by the beat
-  const bars=48, bw=Math.floor(w/bars); const lift=pulse*8;
-  for(let i=0;i<bars;i++){
-    let v = (playing&&analyser)? freqData[i*2+2]/255 : (Math.sin(phase*.6+i*.4)*.5+.5)*.26+.04;
-    const bh=Math.max(2,v*(h-30)+lift), x=i*bw+1, y=h-bh-2;
-    const grd=cx.createLinearGradient(0,y,0,h); grd.addColorStop(0,css('--accent2')); grd.addColorStop(1,css('--accent'));
-    cx.fillStyle=grd; for(let yy=y; yy<h-2; yy+=4){ cx.globalAlpha=.92; cx.fillRect(x,yy,bw-2,3); }
-    cx.globalAlpha=.5; cx.fillStyle=css('--accent'); cx.fillRect(x,y-2,bw-2,2);
-  }
+  const bars=48, bw=Math.floor(w/bars), lift=pulse*8;
+  for(let i=0;i<bars;i++){ let v=(playing&&analyser)? freqData[i*2+2]/255 : (Math.sin(phase*.6+i*.4)*.5+.5)*.26+.04;
+    const bh=Math.max(2,v*(h-30)+lift), x=i*bw+1, y=h-bh-2; const grd=cx.createLinearGradient(0,y,0,h); grd.addColorStop(0,css('--accent2')); grd.addColorStop(1,css('--accent'));
+    cx.fillStyle=grd; for(let yy=y; yy<h-2; yy+=4){ cx.globalAlpha=.92; cx.fillRect(x,yy,bw-2,3); } cx.globalAlpha=.5; cx.fillStyle=css('--accent'); cx.fillRect(x,y-2,bw-2,2); }
   cx.globalAlpha=1;
-  // floating waveform line — glowing neon, amplitude reacts to the beat, with a mirrored ghost + soft fill
-  const midY=h*0.30, amp=20*(1+pulse*0.9);
-  const pts=[]; for(let i=0;i<=w;i+=2){ const idx=Math.floor(i/w*(timeData?timeData.length:2));
+  const midY=h*0.30, amp=20*(1+pulse*0.9); const pts=[]; for(let i=0;i<=w;i+=2){ const idx=Math.floor(i/w*(timeData?timeData.length:2));
     const t=(playing&&timeData)?(timeData[idx]/128-1):Math.sin(phase+i*.05)*.28; pts.push([i, midY+t*amp]); }
-  // soft fill under the line
   cx.beginPath(); cx.moveTo(0,midY); for(const p of pts)cx.lineTo(p[0],p[1]); cx.lineTo(w,midY);
-  const fill=cx.createLinearGradient(0,midY-amp,0,midY+amp); fill.addColorStop(0,'rgba(255,255,255,.10)'); fill.addColorStop(1,'transparent');
-  cx.fillStyle=fill; cx.fill();
-  // mirrored ghost
-  cx.save(); cx.globalAlpha=.22; cx.strokeStyle=css('--accent2'); cx.lineWidth=2; cx.beginPath();
-  pts.forEach((p,i)=> i?cx.lineTo(p[0],midY-(p[1]-midY)):cx.moveTo(p[0],midY-(p[1]-midY))); cx.stroke(); cx.restore();
-  // main glowing line
+  const fill=cx.createLinearGradient(0,midY-amp,0,midY+amp); fill.addColorStop(0,'rgba(255,255,255,.10)'); fill.addColorStop(1,'transparent'); cx.fillStyle=fill; cx.fill();
+  cx.save(); cx.globalAlpha=.22; cx.strokeStyle=css('--accent2'); cx.lineWidth=2; cx.beginPath(); pts.forEach((p,i)=> i?cx.lineTo(p[0],midY-(p[1]-midY)):cx.moveTo(p[0],midY-(p[1]-midY))); cx.stroke(); cx.restore();
   cx.save(); cx.shadowColor=css('--accent'); cx.shadowBlur=10+pulse*16; cx.lineWidth=2.4; cx.lineJoin="round";
   const lg=cx.createLinearGradient(0,0,w,0); lg.addColorStop(0,css('--accent')); lg.addColorStop(.5,'#ffffff'); lg.addColorStop(1,css('--accent2'));
   cx.strokeStyle=lg; cx.beginPath(); pts.forEach((p,i)=> i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])); cx.stroke(); cx.restore();
-  phase+=playing?.16:.05;
-}
+  phase+=playing?.16:.05; }
 function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#36e3ff"; }
 
 /* events */
@@ -563,45 +768,25 @@ window.addEventListener("keydown",e=>{ const tag=(e.target.tagName||"").toLowerC
   else if(e.code==="ArrowLeft"){ setStation(STATIONS.indexOf(station)-1); if(!playing)start(); }
   else if(e.key.toLowerCase()==="r"){ shuffle(); } });
 
-/* section tabs — each tab is its own song pack + skin */
-function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
-  document.body.dataset.skin=key;
-  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.skin===key));
-  $("tagtxt").textContent = key==="cyber"?"cyberwave":key==="rain"?"rain radio":"pixel radio";
-  salt=0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI();
-  if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); } }
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setSection(t.dataset.skin));
-
-/* rolling marquee — rotates the message once per scroll */
-const MQ=[
-  "Generative chiptune — every loop is freshly composed, never the same twice.",
-  "Three packs: PIXEL RADIO · CYBERPUNK · RAIN — each with its own stations.",
-  "Drag the song list to scroll it, or just use your mouse wheel.",
-  "Hit ⟳ to reshuffle the current tune into a brand-new take.",
-  "60 stations and counting — pick a vibe and vibe-code on.",
-  "All sound is synthesized live with the Web Audio API — zero audio files.",
-  "CYBERPUNK runs hot and neon. RAIN keeps it soft and grey.",
-];
-(function(){ const el=$("mqText"); if(!el)return; let i=0;
-  el.addEventListener("animationiteration",()=>{ i=(i+1)%MQ.length; el.textContent=MQ[i]; }); })();
-
-/* custom themed tooltip — replaces the native white box */
+/* tooltip */
 const tip=document.createElement("div"); tip.id="tip"; document.body.appendChild(tip);
-function moveTip(x,y){ const w=tip.offsetWidth,h=tip.offsetHeight;
-  tip.style.left=Math.min(x+14, innerWidth-w-10)+"px"; tip.style.top=Math.min(y+18, innerHeight-h-10)+"px"; }
+function moveTip(x,y){ const w=tip.offsetWidth,h=tip.offsetHeight; tip.style.left=Math.min(x+14, innerWidth-w-10)+"px"; tip.style.top=Math.min(y+18, innerHeight-h-10)+"px"; }
 document.addEventListener("pointermove",e=>{ const el=e.target.closest&&e.target.closest("[data-tip]");
-  if(el){ tip.textContent=el.getAttribute("data-tip"); tip.style.opacity="1"; moveTip(e.clientX,e.clientY); } else tip.style.opacity="0"; });
+  if(el && !document.body.classList.contains("mobile")){ tip.textContent=el.getAttribute("data-tip"); tip.style.opacity="1"; moveTip(e.clientX,e.clientY); } else tip.style.opacity="0"; });
 document.addEventListener("pointerdown",()=>tip.style.opacity="0");
 
-/* drag-to-scroll the song list (scrollbar hidden; wheel still works) */
+/* drag-to-scroll list */
 (function(){ const L=$("list"); let down=false,sy=0,top=0,moved=0;
   L.addEventListener("pointerdown",e=>{ down=true; sy=e.clientY; top=L.scrollTop; moved=0; L.classList.add("grabbing"); });
   window.addEventListener("pointermove",e=>{ if(!down)return; const dy=e.clientY-sy; moved=Math.abs(dy); L.scrollTop=top-dy; });
   window.addEventListener("pointerup",()=>{ down=false; L.classList.remove("grabbing"); });
   L.addEventListener("click",e=>{ if(moved>6){ e.stopPropagation(); e.preventDefault(); } }, true); })();
 
+/* init */
+const isMobile = (matchMedia&&matchMedia("(pointer:coarse)").matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || innerWidth<700;
+if(isMobile) document.body.classList.add("mobile");
 document.body.dataset.skin="pixel";
-applyTheme(); renderList(); setUI(); draw();
+setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); draw();
 </script>
 </body>
 </html>
