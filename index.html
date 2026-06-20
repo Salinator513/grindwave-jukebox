@@ -33,9 +33,9 @@ body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;o
 @keyframes drift{to{transform:translate(34px,34px)}}
 
 /* tab-return vignette: thick rectangular edge darkening that fades out */
-#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;
-  box-shadow:inset 0 0 130px 60px rgba(0,0,0,.92), inset 0 0 46px 14px rgba(0,0,0,.8);
-  background:radial-gradient(125% 125% at 50% 50%, transparent 52%, rgba(0,0,0,.5) 100%);}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;transition:opacity 1.9s ease;
+  box-shadow:inset 0 0 165px 88px rgba(0,0,0,.95), inset 0 0 72px 26px rgba(0,0,0,.8);
+  background:radial-gradient(135% 135% at 50% 50%, transparent 46%, rgba(0,0,0,.55) 100%);}
 
 .shell{position:relative;z-index:3;width:min(880px,94vw);
   background:linear-gradient(180deg,var(--panel),var(--panel2));
@@ -104,7 +104,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .hint{margin-top:9px;font-size:16px;color:var(--dim);text-align:center;letter-spacing:1px}
 .hint b{color:var(--accent)}
 .marquee{overflow:hidden;white-space:nowrap;margin-top:2px}
-.marquee span{display:inline-block;padding-left:100%;animation:mq 20s linear infinite;color:var(--dim);font-size:16px}
+.marquee span{display:inline-block;padding-left:100%;animation:mq 28s linear infinite;color:var(--dim);font-size:16px}
 @keyframes mq{to{transform:translateX(-100%)}}
 
 /* list: hidden scrollbar + grab-to-scroll */
@@ -152,14 +152,31 @@ body[data-skin="cyber"] .tab.active{color:#0a0a06;background:#ffe60a;border-colo
 body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
 @keyframes glitch{0%,92%,100%{text-shadow:0 0 9px var(--accent)}
   93%{text-shadow:2px 0 #ff2e6e,-2px 0 #00e5ff}95%{text-shadow:-2px 0 #ff2e6e,2px 0 #00e5ff}97%{text-shadow:1px 0 #00e5ff,-1px 0 #ffe60a}}
+
+/* falling-rain overlay (rain skin only) */
+#rain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s;
+  background-image:repeating-linear-gradient(101deg, transparent 0 8px, rgba(160,205,255,.085) 8px 9px);
+  animation:rainfall .6s linear infinite}
+@keyframes rainfall{from{background-position:0 0}to{background-position:-26px 100vh}}
+body[data-skin="rain"] #rain{opacity:.5}
+
+/* ===================== RAIN SKIN ===================== */
+body[data-skin="rain"]{background:
+  radial-gradient(1000px 560px at 70% -10%, #4f7fbf22, transparent 60%),
+  radial-gradient(820px 460px at 12% 112%, #2a3f5f30, transparent 60%),
+  linear-gradient(180deg,#0a1422,#070f1b 60%,#050a14);}
+body[data-skin="rain"] .logo{text-shadow:0 0 8px var(--accent), 2px 2px 0 #2b4a72}
+body[data-skin="rain"] .tab.active{box-shadow:0 -2px 16px color-mix(in srgb,var(--accent) 45%,transparent)}
 </style>
 </head>
 <body>
 <div id="vig"></div>
+<div id="rain"></div>
 <div class="wrap">
 <div class="tabs">
-  <button class="tab active" data-skin="pixel" data-tip="Pixel-radio skin">▚ PIXEL RADIO</button>
-  <button class="tab" data-skin="cyber" data-tip="Cyberpunk skin · yellow 2077 emblem">▚ CYBERPUNK</button>
+  <button class="tab active" data-skin="pixel" data-tip="Pixel radio · 30 chiptune stations">▚ PIXEL RADIO</button>
+  <button class="tab" data-skin="cyber" data-tip="Cyberpunk · 15 neon-EDM stations">▚ CYBERPUNK</button>
+  <button class="tab" data-skin="rain" data-tip="Rain · 15 calm lo-fi stations">▚ RAIN</button>
 </div>
 <div class="shell" id="shell">
   <div class="topbar">
@@ -189,7 +206,7 @@ body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 
         <button class="btn ghost" id="shuffle" data-tip="Reshuffle this tune (R)">⟳</button>
         <div class="vol">VOL<input id="vol" type="range" min="0" max="100" value="62"></div>
       </div>
-      <div class="marquee"><span>Generative chiptune — every loop is freshly composed, never the same twice. Pick a station, hit play, vibe-code on. Switch tabs and come back to see the focus vignette.</span></div>
+      <div class="marquee"><span id="mqText">Generative chiptune — every loop is freshly composed, never the same twice.</span></div>
     </div>
   </div>
   <div class="hint"><b>SPACE</b> play/pause &nbsp;·&nbsp; <b>← →</b> change station &nbsp;·&nbsp; <b>R</b> reshuffle &nbsp;·&nbsp; drag the list to scroll</div>
@@ -206,19 +223,83 @@ const SCALES={
 const BARS=4;
 // Stations — distinct keys/scales/tempos/moods. leadType pulse|saw, pump=sidechain depth,
 // arp=add a shimmering 16th arpeggio, loops=nominal song length in 4-bar phrases.
-const STATIONS=[
-  { name:"Neon Dawn",    mood:"warm lo-fi sunrise",        key:72, scale:"lydian",  prog:[0,3,5,4], bpm:82,  lead:"pulse", duty:.25, vib:3, density:.4,  drums:"chill",   bass:"roots", pump:.12, arp:false, loops:13, a:"#36e3ff", b:"#7dff5a" },
-  { name:"Cassette Quest",mood:"cozy overworld adventure", key:69, scale:"dorian",  prog:[0,3,4,0], bpm:104, lead:"pulse", duty:.5,  vib:4, density:.54, drums:"backbeat",bass:"bounce",pump:.16, arp:false, loops:16, a:"#ffc24a", b:"#ff8a5a" },
-  { name:"Elysia",       mood:"euphoric saber-EDM (Elixia-style)",key:64, scale:"major", prog:[0,5,3,4], bpm:128, lead:"saw", duty:.5, vib:5, density:.66, drums:"four", bass:"drive", pump:.42, arp:true, loops:24, a:"#ff5ad8", b:"#36e3ff" },
-  { name:"Hyperdrive",   mood:"arcade rush, full send",    key:67, scale:"major",   prog:[0,5,3,4], bpm:138, lead:"pulse", duty:.5,  vib:5, density:.7,  drums:"four",    bass:"drive", pump:.34, arp:false, loops:26, a:"#ff7ad0", b:"#b98cff" },
-  { name:"Moonpool",     mood:"dreamy, weightless",        key:74, scale:"pentaMaj",prog:[0,5,3,4], bpm:72,  lead:"pulse", duty:.125,vib:6, density:.3,  drums:"sparse",  bass:"pad",   pump:.1,  arp:false, loops:11, a:"#9b8cff", b:"#36e3ff" },
-  { name:"Pixel Rain",   mood:"rainy melancholy",          key:66, scale:"minor",   prog:[0,5,3,4], bpm:92,  lead:"pulse", duty:.3,  vib:4, density:.44, drums:"swing",   bass:"roots", pump:.15, arp:false, loops:15, a:"#5aa9ff", b:"#7fa8c9" },
-  { name:"Sunset Drive", mood:"neon synthwave cruise",     key:71, scale:"mixo",    prog:[0,4,5,3], bpm:116, lead:"saw",   duty:.5,  vib:5, density:.6,  drums:"four",    bass:"drive", pump:.4,  arp:false, loops:20, a:"#ff7ad0", b:"#ffd24a" },
-  { name:"Deep Cache",   mood:"dark focus tunnel",         key:60, scale:"minor",   prog:[0,5,3,4], bpm:88, lead:"pulse", duty:.2, vib:3, density:.4, drums:"backbeat", bass:"roots", pump:.2, arp:false, loops:14, a:"#2fd6c8", b:"#3b7bff" },
-  { name:"Starlit",      mood:"sleepy 60bpm focus",        key:67, scale:"pentaMaj",prog:[0,3,5,4], bpm:60,  lead:"pulse", duty:.125,vib:5, density:.26, drums:"sparse",  bass:"pad",   pump:.08, arp:false, loops:9,  a:"#b08cff", b:"#5ad7ff" },
-  { name:"Glacier",      mood:"icy chillstep",             key:62, scale:"lydian",  prog:[0,5,3,4], bpm:100, lead:"saw",   duty:.5,  vib:4, density:.5,  drums:"four",    bass:"pad",   pump:.3,  arp:true,  loops:17, a:"#7fe9ff", b:"#9b8cff" },
-];
-STATIONS.forEach(s=>{ if(!s.prog) s.prog=[0,5,3,4]; }); // guard
+const PA=[0,5,3,4], PB=[0,3,4,0], PC=[0,3,5,4], PD=[0,4,5,3], PE=[0,5,6,4];
+function shade(hex,amt){ const n=parseInt(hex.slice(1),16), cl=v=>v<0?0:v>255?255:v;
+  const r=cl(((n>>16)&255)+amt),g=cl(((n>>8)&255)+amt),b=cl((n&255)+amt);
+  return '#'+(((1<<24)+(r<<16)+(g<<8)+b)>>>0).toString(16).slice(1); }
+function st(o){ o.vib=o.vib??4; o.duty=o.duty??.5; o.pump=o.pump??.2; o.arp=o.arp??false; o.prog=o.prog||PA;
+  o.loops=o.loops??Math.max(8,Math.round(155*o.bpm/(16*60))); o.b=o.b||shade(o.a,44); return o; }
+
+const SECTIONS={
+  pixel:[
+    st({name:"Neon Dawn",mood:"warm lo-fi sunrise",key:72,scale:"lydian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#36e3ff",prog:PC}),
+    st({name:"Cassette Quest",mood:"cozy overworld",key:69,scale:"dorian",bpm:104,lead:"pulse",density:.54,drums:"backbeat",bass:"bounce",pump:.16,a:"#ffc24a",prog:PB}),
+    st({name:"Elysia",mood:"euphoric saber-EDM",key:64,scale:"major",bpm:128,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.42,arp:true,a:"#ff5ad8"}),
+    st({name:"Hyperdrive",mood:"arcade full send",key:67,scale:"major",bpm:138,lead:"pulse",density:.7,drums:"four",bass:"drive",pump:.34,a:"#ff7ad0"}),
+    st({name:"Moonpool",mood:"dreamy, weightless",key:74,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.1,a:"#9b8cff"}),
+    st({name:"Pixel Rain",mood:"rainy melancholy",key:66,scale:"minor",bpm:92,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"roots",pump:.15,a:"#5aa9ff"}),
+    st({name:"Sunset Drive",mood:"synthwave cruise",key:71,scale:"mixo",bpm:116,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.4,a:"#ff7ad0",prog:PD}),
+    st({name:"Deep Cache",mood:"dark focus tunnel",key:60,scale:"minor",bpm:88,lead:"pulse",duty:.2,density:.4,drums:"backbeat",bass:"roots",pump:.2,a:"#2fd6c8"}),
+    st({name:"Starlit",mood:"sleepy focus",key:67,scale:"pentaMaj",bpm:60,lead:"pulse",duty:.125,density:.26,drums:"sparse",bass:"pad",pump:.08,a:"#b08cff",prog:PC}),
+    st({name:"Glacier",mood:"icy chillstep",key:62,scale:"lydian",bpm:100,lead:"saw",density:.5,drums:"four",bass:"pad",pump:.3,arp:true,a:"#7fe9ff"}),
+    st({name:"Bit Bloom",mood:"bright garden chip",key:69,scale:"major",bpm:112,lead:"pulse",density:.6,drums:"backbeat",bass:"bounce",a:"#7dff5a"}),
+    st({name:"Arcade Alley",mood:"coin-op bounce",key:65,scale:"mixo",bpm:126,lead:"pulse",density:.7,drums:"four",bass:"drive",pump:.3,a:"#ffd24a"}),
+    st({name:"Vector Valley",mood:"breezy explore",key:72,scale:"lydian",bpm:96,lead:"pulse",duty:.25,density:.5,drums:"chill",bass:"roots",a:"#36ffd0",prog:PC}),
+    st({name:"Coin Rush",mood:"frantic collect",key:64,scale:"major",bpm:150,lead:"pulse",density:.82,drums:"four",bass:"drive",pump:.36,a:"#ffb03a"}),
+    st({name:"Sprite Garden",mood:"gentle skip",key:67,scale:"pentaMaj",bpm:90,lead:"pulse",duty:.25,density:.46,drums:"chill",bass:"bounce",a:"#9bff8c"}),
+    st({name:"Turbo Tunnel",mood:"speed stage",key:60,scale:"minor",bpm:144,lead:"saw",density:.78,drums:"four",bass:"drive",pump:.4,a:"#ff4d6d"}),
+    st({name:"Chip Choir",mood:"bittersweet hymn",key:65,scale:"dorian",bpm:84,lead:"pulse",density:.42,drums:"swing",bass:"roots",a:"#8ca8ff"}),
+    st({name:"Mellow Modem",mood:"dial-up calm",key:70,scale:"lydian",bpm:76,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#5ad7ff"}),
+    st({name:"Cartridge Dreams",mood:"nostalgic glow",key:68,scale:"major",bpm:100,lead:"pulse",density:.52,drums:"backbeat",bass:"roots",a:"#ffc46a",prog:PB}),
+    st({name:"Pulse Meadow",mood:"airy lead + pads",key:74,scale:"pentaMaj",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"pad",a:"#a0ffd6"}),
+    st({name:"Retro Rapids",mood:"flowing run",key:67,scale:"mixo",bpm:120,lead:"pulse",density:.66,drums:"four",bass:"bounce",pump:.28,a:"#36e3ff"}),
+    st({name:"Square Wave Bay",mood:"sunny surf",key:71,scale:"major",bpm:110,lead:"pulse",density:.58,drums:"backbeat",bass:"bounce",a:"#ffe06a",prog:PD}),
+    st({name:"Save Point",mood:"hopeful pause",key:65,scale:"lydian",bpm:88,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"pad",a:"#7dffea"}),
+    st({name:"Overworld Skies",mood:"grand journey",key:63,scale:"major",bpm:104,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.3,a:"#6ab8ff",prog:PC}),
+    st({name:"Boss Approach",mood:"tense build",key:59,scale:"minor",bpm:132,lead:"saw",density:.74,drums:"four",bass:"drive",pump:.42,a:"#ff5a5a"}),
+    st({name:"Victory Lap",mood:"triumphant",key:67,scale:"major",bpm:126,lead:"pulse",density:.7,drums:"four",bass:"drive",pump:.3,arp:true,a:"#ffd24a",prog:PD}),
+    st({name:"Console Cove",mood:"chill harbor",key:70,scale:"dorian",bpm:92,lead:"pulse",density:.46,drums:"swing",bass:"roots",a:"#5ad1c0"}),
+    st({name:"Power-Up Plaza",mood:"peppy",key:72,scale:"major",bpm:118,lead:"pulse",density:.64,drums:"backbeat",bass:"bounce",pump:.26,a:"#ff8ad0"}),
+    st({name:"Floppy Disk",mood:"quirky retro",key:64,scale:"mixo",bpm:108,lead:"pulse",duty:.3,density:.56,drums:"backbeat",bass:"roots",a:"#b6ff5a",prog:PB}),
+    st({name:"Game Over Blues",mood:"wistful end",key:61,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.34,drums:"sparse",bass:"pad",a:"#7f8cff"}),
+  ],
+  cyber:[
+    st({name:"Night City",mood:"neon skyline pulse",key:61,scale:"minor",bpm:120,lead:"saw",density:.66,drums:"four",bass:"drive",pump:.45,a:"#ffe60a"}),
+    st({name:"Chrome Veins",mood:"cold industrial",key:59,scale:"minor",bpm:128,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.5,a:"#ff2e6e"}),
+    st({name:"Black ICE",mood:"hacking tension",key:60,scale:"dorian",bpm:132,lead:"saw",density:.72,drums:"four",bass:"drive",pump:.46,arp:true,a:"#00e5ff"}),
+    st({name:"Neon Yakuza",mood:"menacing strut",key:57,scale:"minor",bpm:112,lead:"saw",density:.6,drums:"backbeat",bass:"drive",pump:.4,a:"#ffd000",prog:PE}),
+    st({name:"Data Heist",mood:"driving chase",key:62,scale:"minor",bpm:140,lead:"saw",density:.8,drums:"four",bass:"drive",pump:.5,a:"#ff3b6b"}),
+    st({name:"Ripperdoc",mood:"clinical cold",key:58,scale:"dorian",bpm:116,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.42,a:"#39e0ff"}),
+    st({name:"Synth Samurai",mood:"blade groove",key:64,scale:"mixo",bpm:124,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.44,arp:true,a:"#ffe60a",prog:PD}),
+    st({name:"Megabuilding",mood:"looming bass",key:55,scale:"minor",bpm:108,lead:"saw",density:.56,drums:"backbeat",bass:"drive",pump:.4,a:"#ff2e6e",prog:PE}),
+    st({name:"Braindance",mood:"woozy hypnotic",key:63,scale:"dorian",bpm:100,lead:"saw",density:.5,drums:"swing",bass:"pad",pump:.34,a:"#b46bff"}),
+    st({name:"Afterlife",mood:"moody club",key:60,scale:"minor",bpm:122,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.46,a:"#00e5ff"}),
+    st({name:"Corpo Plaza",mood:"sleek + cold",key:65,scale:"mixo",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.4,a:"#ffe60a",prog:PD}),
+    st({name:"Voodoo Bass",mood:"dub menace",key:58,scale:"minor",bpm:92,lead:"saw",density:.5,drums:"backbeat",bass:"drive",pump:.38,a:"#ff3b6b"}),
+    st({name:"Quickhack",mood:"glitch sprint",key:61,scale:"minor",bpm:146,lead:"saw",density:.82,drums:"four",bass:"drive",pump:.52,arp:true,a:"#39e0ff"}),
+    st({name:"Edgerunner",mood:"reckless rush",key:63,scale:"minor",bpm:134,lead:"saw",density:.76,drums:"four",bass:"drive",pump:.48,a:"#ffd000"}),
+    st({name:"2077 Drive",mood:"euphoric night",key:67,scale:"major",bpm:126,lead:"saw",density:.7,drums:"four",bass:"drive",pump:.44,arp:true,a:"#ffe60a",prog:PD}),
+  ],
+  rain:[
+    st({name:"Petrichor",mood:"first-rain calm",key:67,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#6fb6ff",prog:PC}),
+    st({name:"Window Seat",mood:"cozy grey",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#8ab0d8"}),
+    st({name:"Grey Morning",mood:"soft wake",key:70,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#9ec7e8",prog:PC}),
+    st({name:"Puddle Steps",mood:"gentle skip",key:68,scale:"dorian",bpm:88,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"bounce",pump:.12,a:"#5ad1d0"}),
+    st({name:"Soft Static",mood:"warm hush",key:72,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#7f9fd6"}),
+    st({name:"Umbrella",mood:"easy stroll",key:66,scale:"minor",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#6a9fe0"}),
+    st({name:"Drizzle",mood:"light patter",key:69,scale:"pentaMin",bpm:90,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"roots",pump:.12,a:"#73c6c0"}),
+    st({name:"Thunder Far Off",mood:"distant low",key:60,scale:"minor",bpm:64,lead:"pulse",duty:.2,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#5a78b8"}),
+    st({name:"Wet Pavement",mood:"neon reflection",key:64,scale:"dorian",bpm:86,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"roots",pump:.14,a:"#5ab0e0"}),
+    st({name:"Tea & Rain",mood:"warm indoors",key:71,scale:"lydian",bpm:76,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#9ad0c4"}),
+    st({name:"Midnight Shower",mood:"late calm",key:62,scale:"minor",bpm:70,lead:"pulse",duty:.2,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#7b86d6"}),
+    st({name:"Storm Lull",mood:"between waves",key:67,scale:"dorian",bpm:82,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#6fbfe0"}),
+    st({name:"Cloudbank",mood:"floating grey",key:74,scale:"pentaMaj",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.06,a:"#a9c4e6",prog:PC}),
+    st({name:"Raincheck",mood:"wistful pause",key:65,scale:"minor",bpm:78,lead:"pulse",duty:.25,density:.38,drums:"chill",bass:"roots",pump:.1,a:"#8a9fd0"}),
+    st({name:"Downpour",mood:"steady full rain",key:63,scale:"dorian",bpm:94,lead:"pulse",duty:.3,density:.5,drums:"swing",bass:"bounce",pump:.14,a:"#4fb4d8"}),
+  ],
+};
+let sectionKey="pixel";
+let STATIONS=SECTIONS[sectionKey];
 
 const mtof = m => 440*Math.pow(2,(m-69)/12);
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -280,13 +361,17 @@ function ensureAudio(){ if(ctx)return;
   freqData=new Uint8Array(analyser.frequencyBinCount); timeData=new Uint8Array(analyser.fftSize);
   master.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination); // no master lowpass — full brightness
 }
+function distCurve(k){ const n=1024,c=new Float32Array(n); for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); } return c; }
 function buildBus(){
   const b=ctx.createGain(); b.gain.value=1;
   const pump=ctx.createGain(); pump.gain.value=1;            // sidechain duck node
   const d=ctx.createDelay(1.0); d.delayTime.value=(60/station.bpm)/2;
   const f=ctx.createGain(); f.gain.value=.32; const w=ctx.createGain(); w.gain.value=.26;
   d.connect(f); f.connect(d); d.connect(w); w.connect(b);
-  b.connect(pump); pump.connect(master);
+  if(sectionKey==="cyber"){ const sh=ctx.createWaveShaper(); sh.curve=distCurve(4.2); sh.oversample="2x";
+    const tame=ctx.createGain(); tame.gain.value=.82; b.connect(sh); sh.connect(tame); tame.connect(pump); }  // industrial grit on the whole cyber mix
+  else b.connect(pump);
+  pump.connect(master);
   return {b,d,pump};
 }
 function swapBus(){ if(bus){ const o=bus, t=ctx.currentTime;
@@ -313,7 +398,15 @@ function pluck(midi,t,vol){ const o=ctx.createOscillator(); o.type=station.lead=
   const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.setValueAtTime(4400,t); lp.frequency.exponentialRampToValueAtTime(900,t+.18);
   const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+.22);
   o.connect(lp).connect(g); g.connect(bus.b); g.connect(bus.d); o.start(t); o.stop(t+.24); }
-function bass(midi,t,dur,vol){ const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=mtof(midi);
+function bass(midi,t,dur,vol){
+  if(sectionKey==="cyber"){                                  // gritty detuned "reese" + sub octave = cyberpunk low end
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1500; lp.Q.value=2.4;
+    const g=ctx.createGain(); env(g,t,dur,vol*1.12,.85);
+    [-14,-7,0,7,14].forEach(dt=>{ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=mtof(midi); o.detune.value=dt; o.connect(lp); o.start(t); o.stop(t+dur+.05); });
+    const sub=ctx.createOscillator(); sub.type="sine"; sub.frequency.value=mtof(midi-12); const sg=ctx.createGain(); sg.gain.value=.55; sub.connect(sg).connect(g); sub.start(t); sub.stop(t+dur+.05);
+    lp.connect(g); g.connect(bus.b); return;
+  }
+  const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=mtof(midi);
   const o2=ctx.createOscillator(); o2.type="square"; o2.frequency.value=mtof(midi); const g2=ctx.createGain(); g2.gain.value=.14;
   const g=ctx.createGain(); env(g,t,dur,vol,.8); o.connect(g); o2.connect(g2).connect(g); g.connect(bus.b);
   o.start(t);o2.start(t);o.stop(t+dur+.04);o2.stop(t+dur+.04); }
@@ -389,7 +482,7 @@ function renderList(){ const L=$("list"); L.innerHTML="";
       <span class="nm">${i+1}. ${s.name}</span>
       <span class="eq"><i></i><i></i><i></i></span>
       <span class="dur">${fmtTime(songLen(s))}</span><span class="meta">${s.bpm}</span>`;
-    r.title=`${s.name} — ${s.mood} · ${fmtTime(songLen(s))}`;
+    r.setAttribute("data-tip", `${s.name} — ${s.mood} · ${fmtTime(songLen(s))}`);
     r.onclick=()=>{ setStation(i); if(!playing)start(); }; L.appendChild(r); });
 }
 function setUI(){ $("npTitle").textContent=station.name; $("npMood").textContent=station.mood;
@@ -403,12 +496,17 @@ function setUI(){ $("npTitle").textContent=station.name; $("npMood").textContent
 function noteName(m){ const N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]; return N[((m%12)+12)%12]+(Math.floor(m/12)-1); }
 function flash(){ document.documentElement.style.setProperty('--glow','60px'); setTimeout(()=>document.documentElement.style.setProperty('--glow','0px'),170); }
 
-/* tab-return focus vignette */
-const vig=$("vig");
-function flashVignette(){ vig.style.transition='none'; vig.style.opacity='1';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{ vig.style.transition='opacity 1.9s ease'; vig.style.opacity='0'; })); }
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) flashVignette(); });
-window.addEventListener('focus',flashVignette);
+/* always-on subtle focus vignette — stays while you're away, settles when you return */
+const vig=$("vig"); const VIG_BASE=0.1, VIG_AWAY=0.4;
+vig.style.opacity=VIG_BASE;
+function vigAway(){ vig.style.transition='none'; vig.style.opacity=VIG_AWAY; }
+function vigSettle(){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ vig.style.transition='opacity 1.9s ease'; vig.style.opacity=VIG_BASE; })); }
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ vigAway(); if(ctx&&playing&&ctx.state==='running') ctx.suspend(); }   // stop the music in a hidden/background tab
+  else { vigSettle(); if(ctx&&playing&&ctx.state==='suspended') ctx.resume(); }              // resume when you come back
+});
+window.addEventListener('blur', vigAway);
+window.addEventListener('focus', vigSettle);
 
 /* visualizer */
 const cv=$("viz"), cx=cv.getContext("2d"); let phase=0;
@@ -465,6 +563,44 @@ window.addEventListener("keydown",e=>{ const tag=(e.target.tagName||"").toLowerC
   else if(e.code==="ArrowLeft"){ setStation(STATIONS.indexOf(station)-1); if(!playing)start(); }
   else if(e.key.toLowerCase()==="r"){ shuffle(); } });
 
+/* section tabs — each tab is its own song pack + skin */
+function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
+  document.body.dataset.skin=key;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.skin===key));
+  $("tagtxt").textContent = key==="cyber"?"cyberwave":key==="rain"?"rain radio":"pixel radio";
+  salt=0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI();
+  if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); } }
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setSection(t.dataset.skin));
+
+/* rolling marquee — rotates the message once per scroll */
+const MQ=[
+  "Generative chiptune — every loop is freshly composed, never the same twice.",
+  "Three packs: PIXEL RADIO · CYBERPUNK · RAIN — each with its own stations.",
+  "Drag the song list to scroll it, or just use your mouse wheel.",
+  "Hit ⟳ to reshuffle the current tune into a brand-new take.",
+  "60 stations and counting — pick a vibe and vibe-code on.",
+  "All sound is synthesized live with the Web Audio API — zero audio files.",
+  "CYBERPUNK runs hot and neon. RAIN keeps it soft and grey.",
+];
+(function(){ const el=$("mqText"); if(!el)return; let i=0;
+  el.addEventListener("animationiteration",()=>{ i=(i+1)%MQ.length; el.textContent=MQ[i]; }); })();
+
+/* custom themed tooltip — replaces the native white box */
+const tip=document.createElement("div"); tip.id="tip"; document.body.appendChild(tip);
+function moveTip(x,y){ const w=tip.offsetWidth,h=tip.offsetHeight;
+  tip.style.left=Math.min(x+14, innerWidth-w-10)+"px"; tip.style.top=Math.min(y+18, innerHeight-h-10)+"px"; }
+document.addEventListener("pointermove",e=>{ const el=e.target.closest&&e.target.closest("[data-tip]");
+  if(el){ tip.textContent=el.getAttribute("data-tip"); tip.style.opacity="1"; moveTip(e.clientX,e.clientY); } else tip.style.opacity="0"; });
+document.addEventListener("pointerdown",()=>tip.style.opacity="0");
+
+/* drag-to-scroll the song list (scrollbar hidden; wheel still works) */
+(function(){ const L=$("list"); let down=false,sy=0,top=0,moved=0;
+  L.addEventListener("pointerdown",e=>{ down=true; sy=e.clientY; top=L.scrollTop; moved=0; L.classList.add("grabbing"); });
+  window.addEventListener("pointermove",e=>{ if(!down)return; const dy=e.clientY-sy; moved=Math.abs(dy); L.scrollTop=top-dy; });
+  window.addEventListener("pointerup",()=>{ down=false; L.classList.remove("grabbing"); });
+  L.addEventListener("click",e=>{ if(moved>6){ e.stopPropagation(); e.preventDefault(); } }, true); })();
+
+document.body.dataset.skin="pixel";
 applyTheme(); renderList(); setUI(); draw();
 </script>
 </body>
