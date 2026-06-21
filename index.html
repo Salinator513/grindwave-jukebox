@@ -4,9 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>GRINDWAVE — generative radio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#36e3ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GRINDWAVE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a1126'/%3E%3Cpath d='M3 16 q3 -11 5.5 0 t5.5 0 t5.5 0 t5.5 0' fill='none' stroke='%2336e3ff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/local-fonts.css"><!-- offline: Google fonts vendored locally -->
 <style>
 :root{
   --accent:#36e3ff; --accent2:#ff5ad8; --ink:#dff6ff; --dim:#7fa8c9;
@@ -891,6 +895,14 @@ cmenu.onclick=e=>{ const a=e.target.getAttribute&&e.target.getAttribute("data-a"
   if(a==="play")playing?stop():start(); else if(a==="next"){setStation(STATIONS.indexOf(station)+1);if(!playing)start();} else if(a==="prev"){setStation(STATIONS.indexOf(station)-1);if(!playing)start();} else if(a==="shuf")shuffle(); else if(a==="pip")popOut(); };
 
 setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); draw();
+</script>
+<script>
+(() => {
+  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+})();
 </script>
 </body>
 </html>
