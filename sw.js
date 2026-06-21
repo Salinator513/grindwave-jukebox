@@ -1,5 +1,20 @@
-const CACHE_NAME = "grindwave-offline-v1";
-const OFFLINE_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./sw.js"];
+const CACHE_NAME = "grindwave-offline-v2";
+const OFFLINE_FILES = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon.svg",
+  "./sw.js",
+  "./fonts/local-fonts.css",
+  "./fonts/press-start-2p-cyrillic-ext.woff2",
+  "./fonts/press-start-2p-cyrillic.woff2",
+  "./fonts/press-start-2p-greek.woff2",
+  "./fonts/press-start-2p-latin-ext.woff2",
+  "./fonts/press-start-2p-latin.woff2",
+  "./fonts/vt323-latin-ext.woff2",
+  "./fonts/vt323-latin.woff2",
+  "./fonts/vt323-vietnamese.woff2"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

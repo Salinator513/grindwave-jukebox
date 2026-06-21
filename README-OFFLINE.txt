@@ -4,7 +4,7 @@ Open index.html directly in a browser after extracting the ZIP/folder.
 
 Notes:
 - This is a single-file app.
-- Online Google font links were removed so the page is offline-safe.
+- Online Google font links were replaced with local `Press Start 2P` and `VT323` font files so the page is offline-safe.
 - The synth code is inline inside index.html.
 - On phones, extract/unzip first. Opening index.html inside a ZIP usually will not work.
 - Audio still requires a tap/click because browsers block autoplay.
