@@ -1,0 +1,19 @@
+{
+  "name": "GRINDWAVE - Generative Radio",
+  "short_name": "GRINDWAVE",
+  "description": "Offline-capable generative synth soundtrack for coding and GRINDQUEST work.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080a0f",
+  "theme_color": "#36e3ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
