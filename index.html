@@ -4,17 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>GRINDWAVE — generative radio</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#36e3ff">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="GRINDWAVE">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="fonts/local-fonts.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a1126'/%3E%3Cpath d='M3 16 q3 -11 5.5 0 t5.5 0 t5.5 0 t5.5 0' fill='none' stroke='%2336e3ff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-/* Offline build: Google font files are vendored locally. */
 :root{
   --accent:#36e3ff; --accent2:#ff5ad8; --ink:#dff6ff; --dim:#7fa8c9;
   --panel:#0d1530; --panel2:#0a1126; --line:#1c2a55; --glow:0px;
+  --pbg:#070d22; --sbg1:#020611; --sbg2:#040a18;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -38,10 +35,10 @@ body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;o
 @keyframes drift{to{transform:translate(34px,34px)}}
 
 /* focus vignette — subtle always, grows when the window/tab isn't selected */
-#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.1;transition:opacity 1.9s ease, box-shadow .5s ease;
-  box-shadow:inset 0 0 150px 70px rgba(0,0,0,.9), inset 0 0 60px 18px rgba(0,0,0,.7);
-  background:radial-gradient(140% 140% at 50% 50%, transparent 50%, rgba(0,0,0,.45) 100%);}
-#vig.big{box-shadow:inset 0 0 260px 150px rgba(0,0,0,.96), inset 0 0 120px 50px rgba(0,0,0,.85);}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.16;transition:opacity 1.9s ease, box-shadow .5s ease;
+  box-shadow:inset 0 0 185px 95px rgba(0,0,0,.93), inset 0 0 75px 24px rgba(0,0,0,.78);
+  background:radial-gradient(135% 135% at 50% 50%, transparent 42%, rgba(0,0,0,.62) 100%);}
+#vig.big{box-shadow:inset 0 0 340px 210px rgba(0,0,0,.98), inset 0 0 160px 80px rgba(0,0,0,.92);}
 
 /* page rain overlay (rain skin) */
 #rain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .8s;
@@ -73,7 +70,7 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
   box-shadow:0 0 0 2px #00000088, 0 0 calc(30px + var(--glow)) color-mix(in srgb,var(--accent) 45%,transparent),
     inset 0 0 0 1px #ffffff12, inset 0 14px 30px #00000055;
   padding:18px; transition:box-shadow .04s linear;}
-.topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}
 .emblem{display:none;align-items:center}
 .emblem svg{width:26px;height:26px;filter:drop-shadow(0 0 7px #ffe60a)}
 .logo{font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:1px;color:#fff;text-shadow:0 0 8px var(--accent), 3px 3px 0 var(--accent2);}
@@ -85,7 +82,7 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 .led{width:10px;height:10px;border-radius:2px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
 
 .main{display:grid;grid-template-columns:1.45fr 1fr;gap:14px}
-.screen{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#020611,#040a18);
+.screen{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,var(--sbg1),var(--sbg2));
   border:2px solid var(--line);box-shadow:inset 0 0 26px #000a, inset 0 0 0 1px #ffffff08}
 #viz{display:block;width:100%;height:212px;image-rendering:pixelated}
 .nowrap{position:absolute;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:2px;text-shadow:0 0 6px #000, 0 1px 0 #000}
@@ -97,7 +94,7 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 .chip b{color:var(--accent)}
 
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
-.list{background:#070d22;border:2px solid var(--line);border-radius:12px;padding:6px;overflow-y:auto;max-height:250px;
+.list{background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:6px;overflow-y:auto;max-height:250px;
   cursor:grab;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
 .list::-webkit-scrollbar{display:none}
 .list.grabbing{cursor:grabbing}
@@ -115,7 +112,7 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
 @keyframes eq{0%,100%{height:4px}50%{height:14px}}
 
-.controls{display:flex;align-items:center;gap:8px;background:#070d22;border:2px solid var(--line);border-radius:12px;padding:10px}
+.controls{display:flex;align-items:center;gap:8px;background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:10px}
 button.btn{font-family:'VT323',monospace;font-size:20px;color:#02060f;cursor:pointer;background:linear-gradient(180deg,#bfefff,var(--accent));border:none;border-radius:9px;padding:6px 11px;box-shadow:0 3px 0 #0a3a52, 0 0 14px color-mix(in srgb,var(--accent) 60%,transparent);text-shadow:0 1px 0 #fff8;transition:transform .06s, box-shadow .12s}
 button.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0a3a52}
 button.btn.ghost{background:#0e1838;color:var(--ink);box-shadow:0 3px 0 #060c1e;border:1px solid var(--line)}
@@ -180,6 +177,36 @@ body[data-skin="dungeon"] .shell{border-radius:8px;background:linear-gradient(18
 body[data-skin="dungeon"] .logo{color:#ffb45a;text-shadow:0 0 10px #ff7a2c, 2px 2px 0 #3a2010}
 @keyframes torch{0%,100%{box-shadow:0 0 0 2px #000,0 0 26px #ff7a2c44,inset 0 0 30px #0008}50%{box-shadow:0 0 0 2px #000,0 0 40px #ff7a2c66,inset 0 0 30px #0008}}
 
+/* per-skin panel colors so the whole player takes on the genre */
+body[data-skin="cyber"]{--pbg:#100d04;--sbg1:#0a0a04;--sbg2:#15110a}
+body[data-skin="rain"]{--pbg:#0a1626;--sbg1:#061018;--sbg2:#0a1422}
+body[data-skin="vapor"]{--pbg:#241640;--sbg1:#1a1030;--sbg2:#2a1a44}
+body[data-skin="gameboy"]{--pbg:#0f380f;--sbg1:#0a280a;--sbg2:#143a14}
+body[data-skin="matrix"]{--pbg:#021a0c;--sbg1:#010a06;--sbg2:#02140a}
+body[data-skin="lofi"]{--pbg:#2c2016;--sbg1:#1c140d;--sbg2:#33271a}
+body[data-skin="forest"]{--pbg:#10301c;--sbg1:#0a2014;--sbg2:#123420}
+body[data-skin="space"]{--pbg:#120e2c;--sbg1:#0a081c;--sbg2:#140f30}
+body[data-skin="dungeon"]{--pbg:#1c140c;--sbg1:#120c07;--sbg2:#221710}
+
+/* cyberpunk loading-screen streaks near the title (pink/yellow) */
+#cyberfx{display:none;position:absolute;left:-4px;right:-4px;top:-8px;height:42px;pointer-events:none;overflow:hidden;z-index:4}
+#cyberfx i{position:absolute;height:2px;left:0;width:42%;opacity:.9;border-radius:2px;box-shadow:0 0 6px currentColor;animation:streak 1.5s linear infinite}
+@keyframes streak{0%{transform:translateX(-130%)}100%{transform:translateX(380%)}}
+body[data-skin="cyber"] #cyberfx{display:block}
+
+/* custom right-click menu */
+#cmenu{display:none;position:fixed;z-index:100;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:9px;padding:5px;font-family:'VT323',monospace;font-size:18px;color:var(--ink);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 50%,transparent);min-width:160px}
+#cmenu div{padding:6px 11px;border-radius:6px;white-space:nowrap}
+#cmenu div:hover{background:color-mix(in srgb,var(--accent) 28%,transparent);color:#fff}
+
+/* living, section-themed background */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#bg::before,#bg::after{content:"";position:absolute;width:64vw;height:64vw;border-radius:50%;filter:blur(85px);opacity:.16}
+#bg::before{left:-12vw;top:-16vw;background:var(--accent);animation:blob1 28s ease-in-out infinite}
+#bg::after{right:-12vw;bottom:-16vw;background:var(--accent2);animation:blob2 34s ease-in-out infinite}
+@keyframes blob1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(22vw,12vh) scale(1.25)}}
+@keyframes blob2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-18vw,-10vh) scale(.85)}}
+
 /* tooltip */
 #tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
 body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
@@ -192,6 +219,9 @@ body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 
   .tabs::-webkit-scrollbar{display:none}
   #viz{height:170px}
   .list{max-height:200px}
+  .controls{flex-wrap:wrap;justify-content:center}
+  .vol{margin-left:0;width:100%;justify-content:center;margin-top:4px}
+  button.btn{font-variant-emoji:text}
 }
 body.mobile #cur{display:none}
 body.mobile{cursor:auto !important}
@@ -201,6 +231,7 @@ body.mobile .row{padding:11px 8px;font-size:20px}
 </style>
 </head>
 <body>
+<div id="bg"></div>
 <div id="vig"></div>
 <div id="rain"></div>
 <div id="cur"></div>
@@ -209,6 +240,7 @@ body.mobile .row{padding:11px 8px;font-size:20px}
 <div class="tabs" id="tabs"></div>
 <div class="shell" id="shell">
   <div class="topbar">
+    <div id="cyberfx" aria-hidden="true"><i style="top:3px;background:#ffe60a"></i><i style="top:9px;width:32%;background:#ff2e6e;animation-delay:.2s"></i><i style="top:15px;width:24%;background:#00e5ff;animation-delay:.5s"></i><i style="top:21px;background:#ffe60a;animation-delay:.35s"></i><i style="top:27px;width:30%;background:#ff2e6e;animation-delay:.8s"></i><i style="top:33px;width:20%;background:#ffe60a;animation-delay:.15s"></i><i style="top:6px;width:16%;background:#fff;animation-delay:1s"></i><i style="top:24px;width:26%;background:#00e5ff;animation-delay:.6s"></i></div>
     <span class="emblem" id="emblem" aria-hidden="true"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M4 7 L30 7 L36 13 L36 36 L14 36 L8 30 L8 7 Z" fill="#0b0b06" stroke="#ffe60a" stroke-width="2.2"/><path d="M26 13 H15 V32 H26 V27 H20 V18 H26 Z" fill="#ffe60a"/><rect x="29.5" y="13" width="3.4" height="19" fill="#ffe60a"/></svg></span>
     <div class="logo"><b>GRIND</b>WAVE</div>
     <div class="tag"><span id="tagtxt">pixel radio</span><span class="blink">_</span></div>
@@ -227,10 +259,11 @@ body.mobile .row{padding:11px 8px;font-size:20px}
     <div class="side">
       <div class="list" id="list"></div>
       <div class="controls">
-        <button class="btn ghost" id="prev" data-tip="Previous station (←)">⏮</button>
-        <button class="btn play" id="play" data-tip="Play / pause (Space)">▶</button>
-        <button class="btn ghost" id="next" data-tip="Next station (→)">⏭</button>
-        <button class="btn ghost" id="shuffle" data-tip="Reshuffle this tune (R)">⟳</button>
+        <button class="btn ghost" id="prev" data-tip="Previous station (←)">⏮&#xFE0E;</button>
+        <button class="btn play" id="play" data-tip="Play / pause (Space)">▶&#xFE0E;</button>
+        <button class="btn ghost" id="next" data-tip="Next station (→)">⏭&#xFE0E;</button>
+        <button class="btn ghost" id="shuffle" data-tip="Reshuffle this tune (R)">⟳&#xFE0E;</button>
+        <button class="btn ghost" id="pip" data-tip="Pop out a mini player that floats over other windows">⧉&#xFE0E;</button>
         <div class="vol">VOL<input id="vol" type="range" min="0" max="100" value="62"></div>
       </div>
       <div class="marquee"><span id="mqText">Every loop is freshly composed. Yes, even the questionable ones.</span></div>
@@ -479,7 +512,7 @@ function nearestIdx(arr,m){ let bi=0,bd=1e9; for(let i=0;i<arr.length;i++){const
 function chordTones(s,bar){ const sc=SCALES[s.scale],deg=s.prog[bar%s.prog.length],out=[];
   for(const k of [0,2,4]){ const si=deg+k,oct=Math.floor(si/sc.length),pc=sc[((si%sc.length)+sc.length)%sc.length]; out.push(s.key+oct*12+pc);} return out; }
 function genMelody(s,rng){
-  const notes=scaleNotes(s), idx=new Array(16*BARS).fill(null); let cur=nearestIdx(notes,s.key);
+  const notes=scaleNotes(s), idx=new Array(16*BARS).fill(null); let cur=clamp(nearestIdx(notes,s.key)+(Math.floor(rng()*9)-4),0,notes.length-1); // varied opening note, not always the tonic
   function bar(b){ const ct=chordTones(s,b).map(m=>nearestIdx(notes,m+12<=notes[notes.length-1]?m+12:m));
     for(let p=0;p<16;p++){ const strong=(p%4===0),med=(p%2===0); const pr=strong?.96:med?(.3+s.density*.55):(s.density*.5);
       if(rng()<pr){ if(strong){ let best=ct[0],bd=1e9; for(const i of ct){const d=Math.abs(i-cur);if(d<bd){bd=d;best=i;}} if(rng()<.3)best=ct[(rng()*ct.length)|0]; cur=best; }
@@ -504,6 +537,9 @@ const DRUMS={
   dnb:     {k:[1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0], s:[0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], h:[1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]},
   halftime:{k:[1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0], s:[0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0], h:[1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]},
 };
+/* each station rotates through a small pool of feels every 2 loops → "several genres per station" */
+const DRUM_POOL={ four:["four","breaks","four","trap"], backbeat:["backbeat","breaks","backbeat","four"], chill:["chill","swing","chill","backbeat"], swing:["swing","chill","swing","trap"], sparse:["sparse","chill","sparse","backbeat"], breaks:["breaks","four","dnb","breaks"], trap:["trap","swing","trap","backbeat"], dnb:["dnb","breaks","dnb","four"], halftime:["halftime","backbeat","halftime"] };
+function activeDrums(){ const pool=DRUM_POOL[station.drums]; return pool?pool[Math.floor(loopN/2)%pool.length]:station.drums; }
 
 /* ============================================================ AUDIO */
 let ctx=null, master=null, comp=null, analyser=null, freqData=null, timeData=null, pulseCache={};
@@ -634,7 +670,7 @@ function playStep(step,t){
   const e=mel[step]; if(e) lead(e.m,t,(60/station.bpm)/4*0.92, station.lead==="saw"?.13:.16);
   if(station.arp){ const ct=chordTones(station,bar); const an=ct[s%ct.length]+12+(s>=8?12:0); pluck(an,t,.045); }
   const bm=bassFor(station,step,bar); if(bm!=null) bass(bm,t,(60/station.bpm)/4*1.7,.15);
-  const D=DRUMS[station.drums]||DRUMS.chill;
+  const D=DRUMS[activeDrums()]||DRUMS.chill;
   if(D.k[s]) kick(t); if(D.s[s]) snare(t); if(D.h[s]) hat(t, s%8===6);
   if(sectionKey==="rain"){ if(Math.random()<.05) droplet(t+Math.random()*(60/station.bpm)/4); if(station.thunder && s===0 && Math.random()<.18) thunder(t, station.name==="Downpour"?.07:.035); }
   if(sectionKey==="forest" && s===0 && Math.random()<.5) bird(t+Math.random()*(60/station.bpm));
@@ -650,12 +686,12 @@ function start(){ ensureAudio(); if(ctx.state==="suspended")ctx.resume(); if(pla
   timer=setInterval(scheduler,120); startAmbience(); try{$("silent").play().catch(()=>{});}catch(e){} setUI(); updateMedia(); }
 function stop(){ if(!playing)return; playing=false; clearInterval(timer); timer=null; stopAmbience();
   if(master) master.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+0.25); try{$("silent").pause();}catch(e){} setUI(); updateMedia(); }
-function setStation(i){ station=STATIONS[(i+STATIONS.length)%STATIONS.length]; salt=0;
+function setStation(i){ station=STATIONS[(i+STATIONS.length)%STATIONS.length]; salt=(Math.random()*4294967296)>>>0;
   applyTheme(); curStep=0; loopN=0; beatTimes=[]; if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); setRainLevel(); } renderList(); setUI(); updateMedia(); }
 function shuffle(){ salt=(salt+0x9e3779b1)>>>0; curStep=0; if(playing){ swapBus(); nextTime=ctx.currentTime+0.04; regen(); } flash(); }
 function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
   document.body.dataset.skin=key; renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
-  salt=0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI(); fxReset();
+  salt=(Math.random()*4294967296)>>>0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI(); fxReset();
   if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); startAmbience(); } updateMedia(); }
 
 /* ============================================================ MEDIA KEYS (AirPods / hardware) */
@@ -689,15 +725,15 @@ function renderList(){ const L=$("list"); L.innerHTML="";
     r.onclick=()=>{ setStation(i); if(!playing)start(); }; L.appendChild(r); }); }
 function setUI(){ $("npTitle").textContent=station.name; $("npMood").textContent=station.mood;
   $("chips").innerHTML=`<span class="chip">KEY <b>${noteName(station.key)}</b></span><span class="chip">SCALE <b>${station.scale}</b></span><span class="chip">TEMPO <b>${station.bpm}</b></span><span class="chip">LEN <b>${fmtTime(songLen(station))}</b></span>`;
-  $("play").textContent=playing?"⏸":"▶"; $("pstat").textContent=playing?"ON AIR":"STANDBY";
+  $("play").textContent=playing?"⏸︎":"▶︎"; $("pstat").textContent=playing?"ON AIR":"STANDBY"; updateMini();
   document.querySelectorAll(".row").forEach((r,i)=>r.classList.toggle("active",STATIONS[i]===station)); }
 function noteName(m){ const N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]; return N[((m%12)+12)%12]+(Math.floor(m/12)-1); }
 function flash(){ document.documentElement.style.setProperty('--glow','60px'); setTimeout(()=>document.documentElement.style.setProperty('--glow','0px'),170); }
 
 /* vignette — subtle always; bigger when the window/tab is NOT selected; music keeps playing */
 const vig=$("vig");
-function vigAway(){ vig.classList.add('big'); vig.style.opacity='.55'; }
-function vigHome(){ vig.classList.remove('big'); vig.style.opacity='.1'; }
+function vigAway(){ vig.classList.add('big'); vig.style.opacity='.8'; }
+function vigHome(){ vig.classList.remove('big'); vig.style.opacity='.16'; }
 document.addEventListener('visibilitychange',()=>{ document.hidden?vigAway():vigHome(); });
 window.addEventListener('blur', vigAway);
 window.addEventListener('focus', vigHome);
@@ -824,15 +860,37 @@ document.addEventListener("pointerdown",()=>tip.style.opacity="0");
 const isMobile = (matchMedia&&matchMedia("(pointer:coarse)").matches) || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || innerWidth<700;
 if(isMobile) document.body.classList.add("mobile");
 document.body.dataset.skin="pixel";
+/* pop-out mini player (Document Picture-in-Picture) — floats over other windows like Spotify */
+let miniWin=null;
+async function popOut(){
+  if(!('documentPictureInPicture' in window)){ const tp=$("tip"); tp.textContent="Pop-out needs Chrome/Edge 116+"; tp.style.opacity="1"; setTimeout(()=>tp.style.opacity="0",2200); return; }
+  if(miniWin){ try{miniWin.close();}catch(e){} miniWin=null; return; }
+  if(!playing) start();
+  const pip=await documentPictureInPicture.requestWindow({width:300,height:140}); const ac=css('--accent');
+  const sEl=pip.document.createElement('style');
+  sEl.textContent="*{box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;user-select:none}body{margin:0;background:#0a1020;color:#dff6ff;overflow:hidden}#m{padding:12px;display:flex;flex-direction:column;gap:7px;height:100%}.t{font-size:15px;color:"+ac+";text-shadow:0 0 6px "+ac+";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s{font-size:12px;color:#7fa8c9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.b{display:flex;gap:8px;margin-top:2px}button{flex:1;font-size:18px;cursor:pointer;background:#0e1838;color:#dff6ff;border:1px solid "+ac+";border-radius:7px;padding:7px}button.p{background:"+ac+";color:#02060f}";
+  pip.document.head.appendChild(sEl);
+  const root=pip.document.createElement('div'); root.id='m';
+  root.innerHTML='<div class="t" id="mt">—</div><div class="s" id="ms">GRINDWAVE</div><div class="b"><button id="mp">⏮︎</button><button class="p" id="mpl">⏸︎</button><button id="mn">⏭︎</button></div>';
+  pip.document.body.appendChild(root);
+  pip.document.getElementById('mp').onclick=()=>{ setStation(STATIONS.indexOf(station)-1); if(!playing)start(); };
+  pip.document.getElementById('mn').onclick=()=>{ setStation(STATIONS.indexOf(station)+1); if(!playing)start(); };
+  pip.document.getElementById('mpl').onclick=()=>{ playing?stop():start(); };
+  miniWin=pip; updateMini(); pip.addEventListener('pagehide',()=>{ miniWin=null; });
+}
+function updateMini(){ if(!miniWin)return; try{ const d=miniWin.document; d.getElementById('mt').textContent=station.name; d.getElementById('ms').textContent=SECTION_META[sectionKey].label+" · "+station.mood; d.getElementById('mpl').textContent=playing?"⏸︎":"▶︎"; }catch(e){} }
+$("pip").onclick=popOut;
+
+/* custom right-click menu (replaces the browser one) */
+const cmenu=document.createElement("div"); cmenu.id="cmenu";
+cmenu.innerHTML='<div data-a="play">▶ / ⏸&nbsp; play · pause</div><div data-a="next">⏭&nbsp; next station</div><div data-a="prev">⏮&nbsp; previous</div><div data-a="shuf">⟳&nbsp; reshuffle tune</div><div data-a="pip">⧉&nbsp; pop-out mini</div>';
+document.body.appendChild(cmenu);
+document.addEventListener("contextmenu",e=>{ e.preventDefault(); cmenu.style.display="block"; cmenu.style.left=Math.min(e.clientX,innerWidth-180)+"px"; cmenu.style.top=Math.min(e.clientY,innerHeight-190)+"px"; });
+document.addEventListener("pointerdown",e=>{ if(!cmenu.contains(e.target)) cmenu.style.display="none"; });
+cmenu.onclick=e=>{ const a=e.target.getAttribute&&e.target.getAttribute("data-a"); cmenu.style.display="none"; if(!a)return;
+  if(a==="play")playing?stop():start(); else if(a==="next"){setStation(STATIONS.indexOf(station)+1);if(!playing)start();} else if(a==="prev"){setStation(STATIONS.indexOf(station)-1);if(!playing)start();} else if(a==="shuf")shuffle(); else if(a==="pip")popOut(); };
+
 setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); draw();
-</script>
-<script>
-(() => {
-  if (!("serviceWorker" in navigator) || !location.protocol.startsWith("http")) return;
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  });
-})();
 </script>
 </body>
 </html>
