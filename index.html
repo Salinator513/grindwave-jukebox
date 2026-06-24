@@ -211,6 +211,24 @@ body[data-skin="cyber"] #cyberfx{display:block}
 @keyframes blob1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(22vw,12vh) scale(1.25)}}
 @keyframes blob2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-18vw,-10vh) scale(.85)}}
 
+/* broader-background canvas (per-section big graphics) */
+#bgcanvas{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+/* game boy controller frame (gameboy skin only) */
+#gbframe{display:none;position:absolute;left:0;right:0;bottom:14px;height:80px;pointer-events:none}
+body[data-skin="gameboy"] #gbframe{display:block}
+body[data-skin="gameboy"] .shell{padding-bottom:104px}
+#gbframe .dpad{position:absolute;left:30px;bottom:8px;width:56px;height:56px}
+#gbframe .dpad::before,#gbframe .dpad::after{content:"";position:absolute;background:#2c2c30;border-radius:5px;box-shadow:inset 0 0 0 1px #111,0 2px 0 #0a0a0a}
+#gbframe .dpad::before{left:19px;top:0;width:18px;height:56px}
+#gbframe .dpad::after{left:0;top:19px;width:56px;height:18px}
+#gbframe .ab{position:absolute;right:30px;bottom:16px;width:100px;height:50px;transform:rotate(-20deg)}
+#gbframe .ab span{position:absolute;width:34px;height:34px;border-radius:50%;background:#8a1f4f;box-shadow:inset 0 -2px 4px #0006,0 2px 0 #4a1029;color:#ffd9ec;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:10px}
+#gbframe .ab .bbtn{left:0;top:10px}
+#gbframe .ab .abtn{right:0;top:0}
+#gbframe .ss{position:absolute;left:50%;bottom:8px;transform:translateX(-50%) rotate(-20deg);display:flex;gap:16px}
+#gbframe .ss span{width:36px;height:9px;border-radius:6px;background:#2c2c30;box-shadow:inset 0 0 0 1px #111}
+
 /* tooltip */
 #tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
 body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
@@ -236,6 +254,7 @@ body.mobile .row{padding:11px 8px;font-size:20px}
 </head>
 <body>
 <div id="bg"></div>
+<canvas id="bgcanvas"></canvas>
 <div id="vig"></div>
 <div id="rain"></div>
 <div id="cur"></div>
@@ -250,6 +269,7 @@ body.mobile .row{padding:11px 8px;font-size:20px}
     <div class="tag"><span id="tagtxt">pixel radio</span><span class="blink">_</span></div>
     <div class="power"><span class="led" id="led"></span><span id="pstat">STANDBY</span></div>
   </div>
+  <div id="gbframe" aria-hidden="true"><div class="dpad"></div><div class="ab"><span class="bbtn">B</span><span class="abtn">A</span></div><div class="ss"><span></span><span></span></div></div>
   <div class="main">
     <div class="screen">
       <canvas id="viz" width="520" height="212"></canvas>
@@ -314,10 +334,10 @@ const SECTION_ORDER=Object.keys(SECTION_META);
 const SKIN_ACCENT={ gameboy:["#9bbc0f","#306230"], matrix:["#00ff66","#1aff8c"] };
 // per-section sound character
 const SECFX={
-  pixel:{}, cyber:{reese:true,grit:1.4}, rain:{amb:"rain",leadLP:2300},
-  vapor:{leadLP:2800,chorus:true}, gameboy:{square:true}, matrix:{leadLP:7000,glitch:true},
-  lofi:{amb:"crackle",leadLP:2500,warm:true}, forest:{amb:"birds",leadLP:3000},
-  space:{amb:"drone",leadLP:2400,longpad:true}, dungeon:{leadLP:2300},
+  pixel:{}, cyber:{reese:true,grit:2.2,dark:true}, rain:{amb:"rain",leadLP:2100,smooth:true},
+  vapor:{leadLP:2300,chorus:true,smooth:true,washed:true,noResolve:true}, gameboy:{square:true}, matrix:{leadLP:7000,glitch:true},
+  lofi:{amb:"crackle",leadLP:2200,warm:true,smooth:true}, forest:{amb:"birds",leadLP:3000,smooth:true},
+  space:{amb:"drone",leadLP:2200,longpad:true,smooth:true,noResolve:true}, dungeon:{leadLP:2300,dark:true},
 };
 const fx=()=>SECFX[sectionKey]||{};
 
@@ -361,11 +381,11 @@ const SECTIONS={
     st({name:"Neon Yakuza",mood:"menacing strut",key:57,scale:"minor",bpm:112,lead:"saw",density:.6,drums:"backbeat",bass:"drive",pump:.36,a:"#ffd000",prog:PE}),
     st({name:"Data Heist",mood:"breakbeat chase",key:62,scale:"minor",bpm:140,lead:"saw",density:.78,drums:"breaks",bass:"drive",pump:.44,a:"#ff3b6b",vary:true}),
     st({name:"Ripperdoc",mood:"clinical cold",key:58,scale:"dorian",bpm:116,lead:"saw",density:.62,drums:"four",bass:"drive",pump:.4,a:"#39e0ff"}),
-    st({name:"Synth Samurai",mood:"blade groove",key:64,scale:"mixo",bpm:124,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.4,arp:true,a:"#ffe60a",prog:PD}),
+    st({name:"Synth Samurai",mood:"blade groove",key:64,scale:"minor",bpm:124,lead:"saw",density:.68,drums:"four",bass:"drive",pump:.42,arp:true,a:"#ffe60a",prog:PA}),
     st({name:"Megabuilding",mood:"looming bass",key:55,scale:"phryg",bpm:108,lead:"saw",density:.56,drums:"backbeat",bass:"drive",pump:.36,a:"#ff2e6e",prog:PE}),
     st({name:"Braindance",mood:"woozy hypnotic",key:63,scale:"dorian",bpm:100,lead:"saw",density:.5,drums:"swing",bass:"pad",pump:.32,a:"#b46bff"}),
     st({name:"Afterlife",mood:"moody club",key:60,scale:"minor",bpm:122,lead:"saw",density:.64,drums:"four",bass:"drive",pump:.42,a:"#00e5ff"}),
-    st({name:"Corpo Plaza",mood:"sleek + cold",key:65,scale:"mixo",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.38,a:"#ffe60a",prog:PD}),
+    st({name:"Corpo Plaza",mood:"sleek + cold",key:65,scale:"minor",bpm:118,lead:"saw",density:.6,drums:"four",bass:"drive",pump:.4,a:"#ffe60a",prog:PA}),
     st({name:"Voodoo Bass",mood:"dub menace",key:58,scale:"minor",bpm:92,lead:"saw",density:.5,drums:"backbeat",bass:"drive",pump:.34,a:"#ff3b6b"}),
     st({name:"Quickhack",mood:"d&b glitch sprint",key:61,scale:"minor",bpm:146,lead:"saw",density:.78,drums:"dnb",bass:"drive",pump:.46,arp:true,a:"#39e0ff"}),
     st({name:"Edgerunner",mood:"reckless rush",key:63,scale:"phryg",bpm:134,lead:"saw",density:.76,drums:"four",bass:"drive",pump:.44,a:"#ffd000"}),
@@ -375,7 +395,7 @@ const SECTIONS={
     st({name:"Petrichor",mood:"first-rain calm",key:67,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.36,drums:"chill",bass:"pad",pump:.1,a:"#6fb6ff",prog:PC,rainLvl:.035}),
     st({name:"Window Seat",mood:"cozy grey",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.25,density:.4,drums:"swing",bass:"roots",pump:.12,a:"#8ab0d8",rainLvl:.045}),
     st({name:"Grey Morning",mood:"soft wake",key:70,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",pump:.08,a:"#9ec7e8",prog:PC,rainLvl:.03}),
-    st({name:"Puddle Steps",mood:"gentle skip",key:68,scale:"dorian",bpm:88,lead:"pulse",duty:.3,density:.44,drums:"swing",bass:"bounce",pump:.12,a:"#5ad1d0",rainLvl:.05}),
+    st({name:"Puddle Steps",mood:"splashy skip",key:68,scale:"dorian",bpm:106,lead:"pulse",duty:.3,density:.5,drums:"swing",bass:"bounce",pump:.12,a:"#5ad1d0",rainLvl:.05}),
     st({name:"Soft Static",mood:"warm hush",key:72,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",pump:.08,a:"#7f9fd6",rainLvl:.03}),
     st({name:"Umbrella",mood:"easy stroll",key:66,scale:"minor",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.12,a:"#6a9fe0",rainLvl:.045}),
     st({name:"Drizzle",mood:"light patter",key:69,scale:"pentaMin",bpm:90,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"roots",pump:.12,a:"#73c6c0",rainLvl:.03}),
@@ -394,7 +414,7 @@ const SECTIONS={
     st({name:"Pool Sunset",mood:"warm chlorine",key:67,scale:"mixo",bpm:76,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",pump:.1,a:"#ffb0e0",prog:PC}),
     st({name:"VHS Dream",mood:"tracking lines",key:65,scale:"major",bpm:64,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#c8a0ff",vary:true}),
     st({name:"Marble Hall",mood:"echoing lobby",key:70,scale:"lydian",bpm:72,lead:"pulse",duty:.25,density:.36,drums:"sparse",bass:"pad",a:"#9ed8ff",prog:PC}),
-    st({name:"Soda Pop",mood:"fizzy nostalgia",key:74,scale:"major",bpm:88,lead:"pulse",duty:.3,density:.5,drums:"backbeat",bass:"bounce",pump:.14,a:"#ffc0e8"}),
+    st({name:"Soda Pop",mood:"fizzy nostalgia",key:74,scale:"major",bpm:102,lead:"pulse",duty:.3,density:.52,drums:"backbeat",bass:"bounce",pump:.14,a:"#ffc0e8"}),
     st({name:"Escalator",mood:"slow ascent",key:68,scale:"mixo",bpm:68,lead:"pulse",duty:.25,density:.34,drums:"chill",bass:"pad",a:"#bfa0ff",prog:PD}),
     st({name:"Florida Water",mood:"humid drift",key:71,scale:"lydian",bpm:74,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"roots",a:"#8af0e0"}),
     st({name:"Neon Palms",mood:"pink horizon",key:66,scale:"major",bpm:80,lead:"pulse",duty:.3,density:.44,drums:"backbeat",bass:"bounce",pump:.12,a:"#ff9ed8",prog:PC}),
@@ -451,7 +471,7 @@ const SECTIONS={
     st({name:"Soft Focus",mood:"blurred edges",key:71,scale:"lydian",bpm:72,lead:"pulse",duty:.125,density:.34,drums:"chill",bass:"pad",a:"#e0c090"}),
     st({name:"Tape Hiss",mood:"warm noise",key:64,scale:"minor",bpm:78,lead:"pulse",duty:.2,density:.38,drums:"swing",bass:"roots",a:"#b89060"}),
     st({name:"Warm Mug",mood:"hands around it",key:68,scale:"major",bpm:82,lead:"pulse",duty:.25,density:.42,drums:"swing",bass:"bounce",pump:.1,a:"#d8b07a"}),
-    st({name:"Night Owl",mood:"quiet hustle",key:63,scale:"dorian",bpm:86,lead:"pulse",duty:.2,density:.46,drums:"swing",bass:"roots",a:"#c89b6c"}),
+    st({name:"Night Owl",mood:"late-shift hustle",key:63,scale:"dorian",bpm:106,lead:"pulse",duty:.2,density:.5,drums:"trap",bass:"roots",a:"#c89b6c"}),
     st({name:"Sleepy Sunday",mood:"no plans",key:70,scale:"major",bpm:68,lead:"pulse",duty:.125,density:.32,drums:"chill",bass:"pad",a:"#e0c8a0"}),
     st({name:"Old Records",mood:"crate digging",key:65,scale:"dorian",bpm:80,lead:"pulse",duty:.2,density:.42,drums:"swing",bass:"bounce",a:"#caa078"}),
     st({name:"Chillhop",mood:"trap-lofi nod",key:67,scale:"minor",bpm:90,lead:"pulse",duty:.25,density:.48,drums:"trap",bass:"roots",pump:.12,a:"#d2a679"}),
@@ -470,7 +490,7 @@ const SECTIONS={
     st({name:"Pinewood",mood:"resin air",key:67,scale:"lydian",bpm:78,lead:"pulse",duty:.2,density:.36,drums:"chill",bass:"roots",a:"#7bd88f"}),
     st({name:"Firefly",mood:"dusk glow",key:70,scale:"pentaMaj",bpm:74,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#bfe6a0"}),
     st({name:"Glade",mood:"hidden opening",key:69,scale:"lydian",bpm:84,lead:"pulse",duty:.25,density:.4,drums:"chill",bass:"bounce",a:"#9be0a8"}),
-    st({name:"Acorn",mood:"playful skip",key:74,scale:"pentaMaj",bpm:96,lead:"pulse",duty:.25,density:.46,drums:"chill",bass:"bounce",pump:.1,a:"#aee6b0"}),
+    st({name:"Acorn",mood:"playful scamper",key:74,scale:"pentaMaj",bpm:114,lead:"pulse",duty:.25,density:.54,drums:"backbeat",bass:"bounce",pump:.12,a:"#aee6b0"}),
     st({name:"Treetops",mood:"high + airy",key:76,scale:"lydian",bpm:80,lead:"pulse",duty:.125,density:.34,drums:"sparse",bass:"pad",a:"#7be0c0"}),
   ],
   space:[
@@ -483,11 +503,11 @@ const SECTIONS={
     st({name:"Pale Blue Dot",mood:"lonely + vast",key:67,scale:"lydian",bpm:58,lead:"pulse",duty:.125,density:.24,drums:"sparse",bass:"pad",a:"#8ab0ff"}),
     st({name:"Lightyears",mood:"long voyage",key:65,scale:"minor",bpm:64,lead:"pulse",duty:.125,density:.28,drums:"sparse",bass:"pad",a:"#b18cff"}),
     st({name:"Void",mood:"absolute quiet",key:60,scale:"minor",bpm:56,lead:"pulse",duty:.125,density:.22,drums:"sparse",bass:"pad",a:"#7c6bff"}),
-    st({name:"Solar Wind",mood:"charged drift",key:72,scale:"lydian",bpm:66,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#c0a0ff"}),
+    st({name:"Solar Wind",mood:"charged drift",key:72,scale:"lydian",bpm:96,lead:"pulse",duty:.125,density:.4,drums:"chill",bass:"pad",a:"#c0a0ff"}),
     st({name:"Cryosleep",mood:"frozen dream",key:64,scale:"pentaMaj",bpm:60,lead:"pulse",duty:.125,density:.26,drums:"sparse",bass:"pad",a:"#9ab0ff"}),
     st({name:"Andromeda",mood:"distant spiral",key:69,scale:"lydian",bpm:68,lead:"pulse",duty:.125,density:.3,drums:"sparse",bass:"pad",a:"#b18cff"}),
     st({name:"Black Hole",mood:"crushing calm",key:57,scale:"phryg",bpm:62,lead:"pulse",duty:.125,density:.28,drums:"sparse",bass:"pad",a:"#8c6bff"}),
-    st({name:"Comet",mood:"streaking by",key:71,scale:"pentaMaj",bpm:72,lead:"pulse",duty:.125,density:.32,drums:"sparse",bass:"pad",a:"#c8b0ff"}),
+    st({name:"Comet",mood:"streaking by",key:71,scale:"pentaMaj",bpm:108,lead:"pulse",duty:.125,density:.44,drums:"chill",bass:"bounce",pump:.1,a:"#c8b0ff"}),
     st({name:"Deep Field",mood:"a thousand suns",key:67,scale:"lydian",bpm:58,lead:"pulse",duty:.125,density:.24,drums:"sparse",bass:"pad",a:"#a890ff"}),
   ],
   dungeon:[
@@ -525,7 +545,8 @@ function genMelody(s,rng){
   bar(0); bar(1); const d2=s.prog[2]-s.prog[0], d3=s.prog[3]-s.prog[1];
   for(let p=0;p<16;p++) idx[32+p]= idx[p]==null?null:clamp(idx[p]+d2,0,notes.length-1);
   for(let p=0;p<16;p++){ const base=idx[16+p]==null?null:idx[16+p]+d3; idx[48+p]= base==null?null:clamp(base,0,notes.length-1); }
-  idx[60]=null; idx[61]=null; idx[62]=null; idx[63]=nearestIdx(notes,s.key);
+  idx[60]=null; idx[61]=null; idx[62]=null;
+  idx[63]= fx().noResolve ? nearestIdx(notes,s.key+10) : nearestIdx(notes,s.key);  // washed sections hang on the ~7th instead of resolving to the tonic
   const out=new Array(64).fill(null);
   for(let p=0;p<64;p++){ if(idx[p]==null)continue; let len=1; while(len<4 && idx[(p+len)%64]==null && (p+len)<64) len++; out[p]={m:notes[idx[p]],len}; }
   return out;
@@ -584,9 +605,11 @@ function lead(midi,t,dur,vol){
   if(station.lead==="saw"){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=F.leadLP||9000; lp.Q.value=.4;
     [-9,-4,0,4,9].forEach(dt=>{ const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=mtof(midi); o.detune.value=dt; o.connect(lp); o.start(t); o.stop(t+dur+.05); });
     lp.connect(g); }
-  else{ const o=ctx.createOscillator(); o.setPeriodicWave(pulseWave(F.square?.5:station.duty)); o.frequency.value=mtof(midi);
-    if(!F.square){ const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=5.4; lg.gain.value=F.chorus?station.vib*2.4:station.vib; lfo.connect(lg).connect(o.detune); lfo.start(t); lfo.stop(t+dur+.05); }
-    if(F.chorus){ const o2=ctx.createOscillator(); o2.setPeriodicWave(pulseWave(.25)); o2.frequency.value=mtof(midi); o2.detune.value=8; const g2=ctx.createGain(); g2.gain.value=.5; o2.connect(g2).connect(g); o2.start(t); o2.stop(t+dur+.05); }
+  else{ const o=ctx.createOscillator();
+    if(F.smooth){ o.type=F.washed?"sine":"triangle"; } else { o.setPeriodicWave(pulseWave(F.square?.5:station.duty)); }  // smooth = non-chip wave (only shallow pixel trace)
+    o.frequency.value=mtof(midi);
+    if(!F.square){ const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=F.washed?1.5:5.4; lg.gain.value=F.chorus?station.vib*2.4:station.vib; lfo.connect(lg).connect(o.detune); lfo.start(t); lfo.stop(t+dur+.05); }  // washed = slow tape wow
+    if(F.chorus){ const o2=ctx.createOscillator(); if(F.smooth)o2.type="triangle"; else o2.setPeriodicWave(pulseWave(.25)); o2.frequency.value=mtof(midi); o2.detune.value=F.washed?-12:8; const g2=ctx.createGain(); g2.gain.value=.5; o2.connect(g2).connect(g); o2.start(t); o2.stop(t+dur+.05); }
     if(F.leadLP){ const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=F.leadLP; o.connect(lp); lp.connect(g); }
     else o.connect(g); }
   g.connect(bus.b); g.connect(bus.d); }
@@ -628,11 +651,20 @@ function startAmbience(){ stopAmbience(); if(!ctx)return; const type=fx().amb;
 function stopAmbience(){ if(!amb)return; const o=amb; amb=null;
   try{ o.g.gain.cancelScheduledValues(ctx.currentTime); o.g.gain.setValueAtTime(Math.max(.0001,o.g.gain.value),ctx.currentTime); o.g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.6); }catch(e){}
   setTimeout(()=>{ try{o.nodes.forEach(n=>{try{n.stop&&n.stop();}catch(e){} try{n.disconnect();}catch(e){}});}catch(e){} },700); }
-function ambRain(){ const src=ctx.createBufferSource(); const len=Math.floor(ctx.sampleRate*2),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+/* map a rain song's title to the kind of rain it should sound like */
+function rainTypeOf(){ const n=(station.name||"").toLowerCase();
+  if(/storm|thunder/.test(n)) return "storm";
+  if(/window|seat|tea|pane|glass/.test(n)) return "window";
+  if(/puddle|pavement|step|splash/.test(n)) return "puddle";
+  if(/downpour|shower|drench/.test(n)) return "shower";
+  return "soft"; }
+function ambRain(){ const rt=rainTypeOf();
+  const src=ctx.createBufferSource(); const len=Math.floor(ctx.sampleRate*2),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<len;i++)d[i]=Math.random()*2-1; src.buffer=buf; src.loop=true;
-  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=900;
-  const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=2600; bp.Q.value=.5;
-  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(Math.max(.0005,station.rainLvl),ctx.currentTime+1.4);
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value= rt==="shower"?550: rt==="window"?1500: 900;
+  const bp=ctx.createBiquadFilter(); bp.type= rt==="window"?"lowpass":"bandpass"; bp.frequency.value= rt==="window"?1700: rt==="puddle"?2200: rt==="shower"?3000: 2600; bp.Q.value= rt==="shower"?.4:.6;
+  const lvl=Math.max(.0005, station.rainLvl*(rt==="shower"?1.6: rt==="soft"?.8: rt==="window"?.85:1));
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(lvl,ctx.currentTime+1.4);
   const lfo=ctx.createOscillator(); lfo.frequency.value=.16; const lg=ctx.createGain(); lg.gain.value=.012; lfo.connect(lg).connect(g.gain);
   src.connect(hp); hp.connect(bp); bp.connect(g); g.connect(master); src.start(); lfo.start();
   return {g,nodes:[src,lfo]}; }
@@ -646,10 +678,13 @@ function ambDrone(){ const g=ctx.createGain(); g.gain.setValueAtTime(.0001,ctx.c
   [0,7,12].forEach((iv,i)=>{ const o=ctx.createOscillator(); o.type=i===1?"sine":"triangle"; o.frequency.value=root*Math.pow(2,iv/12); o.detune.value=(i-1)*7; o.connect(f); o.start(); ns.push(o); });
   f.connect(g); g.connect(master); return {g,nodes:ns}; }
 function setRainLevel(){ if(amb&&fx().amb==="rain"){ try{ amb.g.gain.cancelScheduledValues(ctx.currentTime); amb.g.gain.setValueAtTime(Math.max(.0001,amb.g.gain.value),ctx.currentTime); amb.g.gain.exponentialRampToValueAtTime(Math.max(.0005,station.rainLvl),ctx.currentTime+1.0);}catch(e){} } }
-function droplet(t){ const o=ctx.createOscillator(); o.type="sine"; const f=900+Math.random()*1700;
-  o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.7,t+.08);
-  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.03,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+.12);
-  o.connect(g).connect(master); o.start(t); o.stop(t+.14); }
+function droplet(t,type){ const o=ctx.createOscillator(); o.type="sine"; let f,vol,dur;
+  if(type==="window"){ f=2400+Math.random()*1600; vol=.028; dur=.06; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.85,t+.04); }       // ticking on glass
+  else if(type==="puddle"){ f=380+Math.random()*460; vol=.04; dur=.16; o.frequency.setValueAtTime(f*1.7,t); o.frequency.exponentialRampToValueAtTime(f*.7,t+.1);     // plop into a puddle
+    const n=noiseSrc(.06),nf=ctx.createBiquadFilter(),ng=ctx.createGain(); nf.type="lowpass"; nf.frequency.value=1100; ng.gain.setValueAtTime(.02,t); ng.gain.exponentialRampToValueAtTime(.0001,t+.06); n.connect(nf).connect(ng).connect(master); n.start(t); n.stop(t+.07); }
+  else { f=900+Math.random()*1700; vol=.024; dur=.12; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*.7,t+.08); }                          // soft drop
+  const g=ctx.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.004); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(master); o.start(t); o.stop(t+dur+.02); }
 function thunder(t,lvl){ const s=noiseSrc(2.4),lp=ctx.createBiquadFilter(),g=ctx.createGain(); lp.type="lowpass"; lp.frequency.value=150; lp.Q.value=.6;
   g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(lvl||.05,t+.6); g.gain.exponentialRampToValueAtTime(.0001,t+2.2);
   s.connect(lp).connect(g).connect(master); s.start(t); s.stop(t+2.4);
@@ -676,7 +711,9 @@ function playStep(step,t){
   const bm=bassFor(station,step,bar); if(bm!=null) bass(bm,t,(60/station.bpm)/4*1.7,.15);
   const D=DRUMS[activeDrums()]||DRUMS.chill;
   if(D.k[s]) kick(t); if(D.s[s]) snare(t); if(D.h[s]) hat(t, s%8===6);
-  if(sectionKey==="rain"){ if(Math.random()<.05) droplet(t+Math.random()*(60/station.bpm)/4); if(station.thunder && s===0 && Math.random()<.18) thunder(t, station.name==="Downpour"?.07:.035); }
+  if(sectionKey==="rain"){ const rt=rainTypeOf(); const dp= rt==="shower"?.17: rt==="window"?.13: rt==="puddle"?.07: .05;
+    if(Math.random()<dp) droplet(t+Math.random()*(60/station.bpm)/4, rt);
+    if(rt==="storm" && s===0 && Math.random()<.22) thunder(t,.05); }
   if(sectionKey==="forest" && s===0 && Math.random()<.5) bird(t+Math.random()*(60/station.bpm));
 }
 function scheduler(){ if(nextTime < ctx.currentTime-0.25) nextTime=ctx.currentTime+0.05;
@@ -812,11 +849,48 @@ function secFx(w,h,pulse){ if(!fxReady) fxInit(w,h); const k=sectionKey;
     for(const e of fxEmber){ cx.fillStyle="rgba(255,150,60,.5)"; cx.beginPath(); cx.arc(e.x,e.y,e.r,0,7); cx.fill(); e.y-=e.s*(playing?1.4:.7); e.x+=Math.sin(phase*.5+e.a)*.4; if(e.y<-4){e.y=h+4;e.x=Math.random()*w;} } }
 }
 function beatPulse(){ if(!ctx) return 0; let p=0; const now=ctx.currentTime; for(const tk of beatTimes){ const dt=now-tk; if(dt>=0&&dt<.6) p=Math.max(p,Math.exp(-dt/.16)); } return p; }
+/* ---- broader per-section background graphics (cached statics + one subtle animated part; rain fully animates) ---- */
+const bcv=$("bgcanvas"), bctx=bcv.getContext("2d");
+const bgStatic=document.createElement("canvas"); const bgsx=bgStatic.getContext("2d");
+let bgSec=null, bgReady=false, bgCity=[], bgRainD=[], bgMtx=[], bgTorch=[];
+function sizeBg(){ bcv.width=innerWidth; bcv.height=innerHeight; bgStatic.width=innerWidth; bgStatic.height=innerHeight; bgReady=false; }
+addEventListener("resize", sizeBg);
+function bgInit(){ const W=bcv.width,H=bcv.height;
+  bgCity=[]; let x=-10; while(x<W){ const bw=44+Math.random()*82, bh=H*(.16+Math.random()*.42); bgCity.push({x,w:bw,h:bh,seed:(Math.random()*1e4)|0}); x+=bw+5+Math.random()*12; }
+  bgRainD=[]; for(let i=0;i<240;i++) bgRainD.push({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*16,s:7+Math.random()*9});
+  bgMtx=[]; const cols=Math.floor(W/28); for(let i=0;i<cols;i++) bgMtx.push({x:i*28+6,y:Math.random()*H,sp:1.2+Math.random()*2.2,trick:Math.random()<.16});
+  bgTorch=[]; [0.05,0.95].forEach(fr=>[H*.3,H*.56,H*.82].forEach(yy=>bgTorch.push({x:W*fr,y:yy,ph:Math.random()*6})));
+  drawBgStatic(); bgReady=true; }
+function drawBgStatic(){ const c=bgsx,W=bgStatic.width,H=bgStatic.height; c.clearRect(0,0,W,H); const k=sectionKey;
+  if(k==="cyber"){ const hz=H*.8;
+    for(const b of bgCity){ c.fillStyle="#08080c"; c.fillRect(b.x,hz-b.h,b.w,b.h+(H-hz)); c.strokeStyle="rgba(255,230,10,.16)"; c.strokeRect(b.x+.5,hz-b.h+.5,b.w-1,b.h);
+      for(let wy=hz-b.h+10; wy<hz-8; wy+=13) for(let wx=b.x+7; wx<b.x+b.w-7; wx+=11){ if(((wx*7+wy*13+b.seed)%41)<16){ c.fillStyle=(wx%2?"rgba(255,230,10,.4)":"rgba(255,46,110,.4)"); c.fillRect(wx,wy,5,6); } } }
+    c.fillStyle="rgba(255,46,110,.10)"; c.fillRect(0,hz-1,W,2);
+  } else if(k==="matrix"){ c.font="20px monospace"; c.fillStyle="rgba(0,255,102,.07)";
+    for(const m of bgMtx) for(let y=20;y<H;y+=24) c.fillText(((m.x*7+y*3)%5<2)?"1":"0", m.x, y);
+  } else if(k==="vapor"){ const hy=H*.62; c.strokeStyle="rgba(255,160,220,.16)"; c.lineWidth=1;
+    for(let i=1;i<14;i++){ const yy=hy+Math.pow(i/14,2)*(H-hy); c.beginPath(); c.moveTo(0,yy); c.lineTo(W,yy); c.stroke(); }
+    for(let i=-10;i<=10;i++){ c.beginPath(); c.moveTo(W/2+i*16,hy); c.lineTo(W/2+i*(W/16),H); c.stroke(); }
+  } else if(k==="dungeon"){ for(const tr of bgTorch){ c.fillStyle="#2a1a0e"; c.fillRect(tr.x-3,tr.y,6,28); } } }
+function bgFx(pulse){ const W=bcv.width,H=bcv.height; if(bgSec!==sectionKey||!bgReady){ bgSec=sectionKey; bgInit(); } bctx.clearRect(0,0,W,H); const k=sectionKey;
+  if(k==="cyber"){ bctx.drawImage(bgStatic,0,0); const hz=H*.8;
+    bctx.fillStyle="rgba(255,230,10,"+(0.25+0.25*Math.abs(Math.sin(phase*.6))).toFixed(2)+")"; for(const b of bgCity){ if(b.seed%3)continue; bctx.fillRect(b.x+b.w/2,hz-b.h+14,5,6); }
+    const lx=W*.5+Math.sin(phase*.14)*W*.42; const g=bctx.createLinearGradient(lx,0,lx,hz); g.addColorStop(0,"rgba(0,229,255,.05)"); g.addColorStop(1,"rgba(0,229,255,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.moveTo(lx,0); bctx.lineTo(lx-60,hz); bctx.lineTo(lx+60,hz); bctx.closePath(); bctx.fill(); }
+  else if(k==="rain"){ bctx.strokeStyle="rgba(150,195,255,.26)"; bctx.lineWidth=1.2; for(const d of bgRainD){ bctx.beginPath(); bctx.moveTo(d.x,d.y); bctx.lineTo(d.x-3,d.y+d.l); bctx.stroke(); d.y+=d.s+(playing?3:1); d.x-=1; if(d.y>H){d.y=-d.l;d.x=Math.random()*W;} } }
+  else if(k==="matrix"){ bctx.drawImage(bgStatic,0,0); bctx.font="20px monospace"; bctx.fillStyle="rgba(120,255,170,.5)"; for(const m of bgMtx){ if(!m.trick)continue; bctx.fillText(Math.random()<.5?"0":"1", m.x, m.y); m.y+=m.sp*(playing?2.2:1.2); if(m.y>H+10)m.y=-10; } }
+  else if(k==="dungeon"){ bctx.drawImage(bgStatic,0,0); for(const tr of bgTorch){ const fl=.7+.3*Math.sin(phase*4+tr.ph)+.08*Math.random();
+    const g=bctx.createRadialGradient(tr.x,tr.y-8,2,tr.x,tr.y-8,82*fl); g.addColorStop(0,"rgba(255,170,60,"+(0.45*fl).toFixed(2)+")"); g.addColorStop(1,"rgba(255,120,30,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.arc(tr.x,tr.y-8,82*fl,0,7); bctx.fill();
+    bctx.fillStyle="rgba(255,190,70,"+(0.85*fl).toFixed(2)+")"; bctx.beginPath(); bctx.moveTo(tr.x,tr.y-18*fl); bctx.lineTo(tr.x-6,tr.y+2); bctx.lineTo(tr.x+6,tr.y+2); bctx.closePath(); bctx.fill(); } }
+  else if(k==="vapor"){ bctx.drawImage(bgStatic,0,0); const sx=W/2,sy=H*.4,R=Math.min(W,H)*.28;
+    const sg=bctx.createRadialGradient(sx,sy,8,sx,sy,R); sg.addColorStop(0,"rgba(255,180,210,.4)"); sg.addColorStop(.6,"rgba(255,120,180,.18)"); sg.addColorStop(1,"rgba(120,80,200,0)"); bctx.fillStyle=sg; bctx.beginPath(); bctx.arc(sx,sy,R,0,7); bctx.fill();
+    const hy=H*.62, nb=24, bw=W/nb; for(let i=0;i<nb;i++){ const v=(playing&&analyser)? freqData[i*3+2]/255 : (Math.sin(phase*.5+i*.5)*.5+.5)*.3; const bh=v*H*.2*(1+pulse*.4); bctx.fillStyle="rgba(255,140,200,.14)"; bctx.fillRect(i*bw+3,hy-bh,bw-6,bh); } }
+}
 function draw(){ requestAnimationFrame(draw); const w=cv.width,h=cv.height; cx.clearRect(0,0,w,h);
   const pulse = playing?beatPulse():0;
   $("shell").style.setProperty('--glow',(pulse*26).toFixed(1)+'px'); $("led").style.boxShadow=`0 0 ${(8+pulse*16).toFixed(0)}px var(--accent)`;
   secFx(w,h,pulse);
   if(playing&&analyser){ analyser.getByteFrequencyData(freqData); analyser.getByteTimeDomainData(timeData); }
+  bgFx(pulse);
   const bars=48, bw=Math.floor(w/bars), lift=pulse*8;
   for(let i=0;i<bars;i++){ let v=(playing&&analyser)? freqData[i*2+2]/255 : (Math.sin(phase*.6+i*.4)*.5+.5)*.26+.04;
     const bh=Math.max(2,v*(h-30)+lift), x=i*bw+1, y=h-bh-2; const grd=cx.createLinearGradient(0,y,0,h); grd.addColorStop(0,css('--accent2')); grd.addColorStop(1,css('--accent'));
@@ -894,7 +968,7 @@ document.addEventListener("pointerdown",e=>{ if(!cmenu.contains(e.target)) cmenu
 cmenu.onclick=e=>{ const a=e.target.getAttribute&&e.target.getAttribute("data-a"); cmenu.style.display="none"; if(!a)return;
   if(a==="play")playing?stop():start(); else if(a==="next"){setStation(STATIONS.indexOf(station)+1);if(!playing)start();} else if(a==="prev"){setStation(STATIONS.indexOf(station)-1);if(!playing)start();} else if(a==="shuf")shuffle(); else if(a==="pip")popOut(); };
 
-setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); draw();
+setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); sizeBg(); draw();
 </script>
 <script>
 (() => {
