@@ -253,7 +253,7 @@ body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 
 @media(max-width:700px){
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   body{display:block;place-items:initial;min-height:100vh;min-height:100dvh}
-  .wrap{width:96vw;margin:0 auto}
+  .wrap{width:90vw;margin:4vh auto}
   .main{grid-template-columns:1fr}
   .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
@@ -270,7 +270,9 @@ body.mobile{
   height:auto;min-height:100vh;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;
   padding:calc(env(safe-area-inset-top) + 8px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 16px) env(safe-area-inset-left);
 }
-body.mobile .wrap{margin:0 auto}
+body.mobile .wrap{width:min(440px,86vw);margin:6vh auto}
+/* readability scrim behind the NOW PLAYING overlay on busy mobile scenes */
+body.mobile .nowrap{background:linear-gradient(transparent,rgba(4,6,12,.6) 38%);padding-top:14px;border-radius:0 0 10px 10px}
 body.mobile #cur{display:none}
 body.mobile button.btn{padding:11px 15px;font-size:22px}
 body.mobile .play{padding:11px 22px}
