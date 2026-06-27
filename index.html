@@ -219,7 +219,7 @@ body[data-skin="cyber"] #cyberfx{display:block}
 #gbframe{display:none;position:absolute;inset:0;pointer-events:none;z-index:5}
 body[data-skin="gameboy"] #gbframe{display:block}
 body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
-#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%)}
+#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%);background:radial-gradient(circle,#3a3a42 0 8px,transparent 9px)}
 #gbframe .dpad::before,#gbframe .dpad::after{content:"";position:absolute;background:#2c2c30;border-radius:5px;box-shadow:inset 0 0 0 1px #111,0 3px 0 #0a0a0a}
 #gbframe .dpad::before{left:22px;top:0;width:18px;height:62px}
 #gbframe .dpad::after{left:0;top:22px;width:62px;height:18px}
@@ -238,11 +238,18 @@ body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
 #gbframe .ab span.gbpress{filter:brightness(1.3);transform:translateY(2px)}
 #gbframe .ss span.gbpress{filter:brightness(1.3);transform:translateY(1px)}
 #led.gbflash{background:#fff;box-shadow:0 0 16px var(--accent),0 0 7px #fff}
-body.mobile[data-skin="gameboy"] .shell{padding:12px 58px 110px 58px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad{left:8px;width:46px;height:46px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad::before{left:14px;width:18px;height:46px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad::after{top:14px;width:46px;height:18px}
-body.mobile[data-skin="gameboy"] #gbframe .ab{right:6px;width:56px}
+/* authentic DMG screen: chunky olive bezel + red power LED */
+body[data-skin="gameboy"] .screen{border-color:#3a3e2c;border-width:3px;box-shadow:inset 0 0 0 6px #6b6f50, inset 0 0 22px #0009}
+body[data-skin="gameboy"] .screen::before{content:"";position:absolute;left:9px;top:9px;width:7px;height:7px;border-radius:50%;background:#e23b3b;box-shadow:0 0 6px #e23b3b;z-index:4}
+/* Game Boy on mobile: vertical-handheld layout — full-width screen/list, controls in a bottom deck */
+body.mobile[data-skin="gameboy"] .shell{padding:14px 16px 186px 16px}
+body.mobile[data-skin="gameboy"] #gbframe .dpad{left:34px;top:auto;bottom:60px;transform:none;width:60px;height:60px;background:radial-gradient(circle,#3a3a42 0 8px,transparent 9px)}
+body.mobile[data-skin="gameboy"] #gbframe .dpad::before{left:21px;top:0;width:18px;height:60px}
+body.mobile[data-skin="gameboy"] #gbframe .dpad::after{left:0;top:21px;width:60px;height:18px}
+body.mobile[data-skin="gameboy"] #gbframe .ab{right:28px;top:auto;bottom:66px;width:86px;height:62px;transform:rotate(-18deg)}
+body.mobile[data-skin="gameboy"] #gbframe .ab .abtn{right:0;top:0}
+body.mobile[data-skin="gameboy"] #gbframe .ab .bbtn{left:0;top:26px}
+body.mobile[data-skin="gameboy"] #gbframe .ss{bottom:22px}
 body.mobile[data-skin="gameboy"] #gbframe .speaker{display:none}
 
 /* tooltip */
