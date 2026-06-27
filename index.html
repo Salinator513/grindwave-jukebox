@@ -232,6 +232,12 @@ body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
 #gbframe .ss span::after{content:attr(data-l);position:absolute;left:0;top:13px;width:100%;text-align:center;font-family:'Press Start 2P',monospace;font-size:6px;color:#46502c}
 #gbframe .speaker{position:absolute;right:32px;bottom:22px;display:flex;gap:5px;transform:rotate(-18deg)}
 #gbframe .speaker i{width:4px;height:30px;border-radius:3px;background:#7a7e60;box-shadow:inset 0 0 0 1px #5a5e44}
+/* interactive Game Boy controls — the device borders are real buttons (per the original spec) */
+#gbframe .ab span,#gbframe .ss span,#gbframe .gbhit{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#gbframe .gbhit{position:absolute}
+#gbframe .ab span.gbpress{filter:brightness(1.3);transform:translateY(2px)}
+#gbframe .ss span.gbpress{filter:brightness(1.3);transform:translateY(1px)}
+#led.gbflash{background:#fff;box-shadow:0 0 16px var(--accent),0 0 7px #fff}
 body.mobile[data-skin="gameboy"] .shell{padding:12px 58px 110px 58px}
 body.mobile[data-skin="gameboy"] #gbframe .dpad{left:8px;width:46px;height:46px}
 body.mobile[data-skin="gameboy"] #gbframe .dpad::before{left:14px;width:18px;height:46px}
@@ -1045,7 +1051,24 @@ document.addEventListener("pointerdown",e=>{ if(!cmenu.contains(e.target)) cmenu
 cmenu.onclick=e=>{ const a=e.target.getAttribute&&e.target.getAttribute("data-a"); cmenu.style.display="none"; if(!a)return;
   if(a==="play")playing?stop():start(); else if(a==="next"){setStation(STATIONS.indexOf(station)+1);if(!playing)start();} else if(a==="prev"){setStation(STATIONS.indexOf(station)-1);if(!playing)start();} else if(a==="shuf")shuffle(); else if(a==="pip")popOut(); };
 
-setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); sizeBg(); draw();
+/* Game Boy: borders act as a real controller (per the original "controllers like the buttons" spec).
+   A = play/pause · B = reshuffle · D-pad ←/→ = station · D-pad ▲/▼ = volume · SELECT/START = section */
+function gbStation(dir){ setStation(STATIONS.indexOf(station)+dir); if(!playing)start(); }
+function gbSection(dir){ const i=SECTION_ORDER.indexOf(sectionKey); setSection(SECTION_ORDER[(i+dir+SECTION_ORDER.length)%SECTION_ORDER.length]); }
+function gbVol(d){ const inp=$("vol"); const v=Math.max(0,Math.min(100,Math.round((+inp.value)+d))); inp.value=v; volume=v/100; if(master&&playing)master.gain.value=volume; }
+function initGbControls(){ const gb=$("gbframe"); if(!gb) return; const led=$("led");
+  const press=el=>{ if(el){ el.classList.add("gbpress"); setTimeout(()=>el.classList.remove("gbpress"),130); } if(led){ led.classList.add("gbflash"); setTimeout(()=>led.classList.remove("gbflash"),150); } };
+  const bind=(el,fn)=>{ if(!el)return; el.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); press(el); fn(); }); };
+  bind(gb.querySelector(".abtn"), ()=>{ playing?stop():start(); });
+  bind(gb.querySelector(".bbtn"), ()=>{ shuffle(); if(!playing)start(); });
+  const ss=gb.querySelectorAll(".ss span"); bind(ss[0], ()=>gbSection(-1)); bind(ss[1], ()=>gbSection(1));
+  const dpad=gb.querySelector(".dpad");
+  if(dpad){ const mk=(css,fn)=>{ const z=document.createElement("div"); z.className="gbhit"; z.style.cssText=css; dpad.appendChild(z); bind(z,fn); };
+    mk("left:0;top:0;width:100%;height:40%", ()=>gbVol(7));
+    mk("left:0;bottom:0;width:100%;height:40%", ()=>gbVol(-7));
+    mk("left:0;top:30%;width:40%;height:40%", ()=>gbStation(-1));
+    mk("right:0;top:30%;width:40%;height:40%", ()=>gbStation(1)); } }
+setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); initGbControls(); sizeBg(); draw();
 </script>
 <script>
 (() => {
