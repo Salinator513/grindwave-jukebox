@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>GRINDWAVE — generative radio</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#36e3ff">
@@ -243,23 +243,38 @@ body.mobile[data-skin="gameboy"] #gbframe .speaker{display:none}
 #tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
 body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
 
-/* mobile */
+/* mobile layout (narrow viewports) — let the page scroll; the desktop build pins the body */
 @media(max-width:700px){
+  html,body{overflow-x:hidden;overflow-y:auto;height:auto}
+  body{display:block;place-items:initial;min-height:100vh;min-height:100dvh}
+  .wrap{width:96vw;margin:0 auto}
   .main{grid-template-columns:1fr}
-  .wrap{width:96vw}
   .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   #viz{height:170px}
-  .list{max-height:200px}
+  .list{max-height:46vh}
   .controls{flex-wrap:wrap;justify-content:center}
   .vol{margin-left:0;width:100%;justify-content:center;margin-top:4px}
   button.btn{font-variant-emoji:text}
+  .np-title{font-size:13px;word-break:break-word}
 }
+/* touch devices (JS-detected: coarse pointer / mobile UA) — scrollable page + comfy targets */
+body.mobile{
+  overflow-x:hidden;overflow-y:auto;display:block;place-items:initial;
+  height:auto;min-height:100vh;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;
+  padding:calc(env(safe-area-inset-top) + 8px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 16px) env(safe-area-inset-left);
+}
+body.mobile .wrap{margin:0 auto}
 body.mobile #cur{display:none}
-body.mobile{cursor:auto !important}
-body.mobile button.btn{padding:10px 14px;font-size:22px}
-body.mobile .play{padding:10px 20px}
-body.mobile .row{padding:11px 8px;font-size:20px}
+body.mobile button.btn{padding:11px 15px;font-size:22px}
+body.mobile .play{padding:11px 22px}
+body.mobile .row{padding:13px 10px;font-size:20px}
+/* the desktop vignette is calibrated for big screens; on a phone its huge inset shadow swallows
+   the whole viewport, so dial it back and let the section background read through */
+body.mobile #vig{opacity:.10;box-shadow:inset 0 0 90px 28px rgba(0,0,0,.6), inset 0 0 38px 10px rgba(0,0,0,.5)}
+body.mobile #vig.big{box-shadow:inset 0 0 150px 70px rgba(0,0,0,.88)}
+body.mobile #bg::before,body.mobile #bg::after{opacity:.30;filter:blur(58px)}
+body.mobile #bgcanvas{opacity:.9}
 </style>
 </head>
 <body>
@@ -794,6 +809,21 @@ function vigHome(){ vig.classList.remove('big'); vig.style.opacity='.16'; }
 document.addEventListener('visibilitychange',()=>{ document.hidden?vigAway():vigHome(); });
 window.addEventListener('blur', vigAway);
 window.addEventListener('focus', vigHome);
+
+/* Keep generative audio alive across tab/app backgrounding and screen-lock, and resume it when
+   we come back. iOS suspends the Web Audio clock whenever the page is hidden, so without this the
+   synth would return silent. The silent looped <audio> element (see setupMedia) holds the audio
+   session; this revives the AudioContext + scheduler on return. NOTE: fully *quitting* the browser
+   stops all web audio — that's an OS limit no website can work around, only a native app can. */
+function resumeAudio(){ if(!playing||!ctx) return;
+  if(ctx.state!=="running") ctx.resume().catch(()=>{});
+  if(nextTime < ctx.currentTime+0.02) nextTime=ctx.currentTime+0.05;
+  if(!timer) timer=setInterval(scheduler,120);
+  try{ const s=$("silent"); if(s && s.paused) s.play().catch(()=>{}); }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) resumeAudio(); });
+window.addEventListener('focus', resumeAudio);
+window.addEventListener('pageshow', resumeAudio);
 
 /* custom cursor */
 const cur=$("cur");
