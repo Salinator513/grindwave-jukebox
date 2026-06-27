@@ -219,7 +219,7 @@ body[data-skin="cyber"] #cyberfx{display:block}
 #gbframe{display:none;position:absolute;inset:0;pointer-events:none;z-index:5}
 body[data-skin="gameboy"] #gbframe{display:block}
 body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
-#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%)}
+#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%);background:radial-gradient(circle,#3a3a42 0 8px,transparent 9px)}
 #gbframe .dpad::before,#gbframe .dpad::after{content:"";position:absolute;background:#2c2c30;border-radius:5px;box-shadow:inset 0 0 0 1px #111,0 3px 0 #0a0a0a}
 #gbframe .dpad::before{left:22px;top:0;width:18px;height:62px}
 #gbframe .dpad::after{left:0;top:22px;width:62px;height:18px}
@@ -232,11 +232,24 @@ body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
 #gbframe .ss span::after{content:attr(data-l);position:absolute;left:0;top:13px;width:100%;text-align:center;font-family:'Press Start 2P',monospace;font-size:6px;color:#46502c}
 #gbframe .speaker{position:absolute;right:32px;bottom:22px;display:flex;gap:5px;transform:rotate(-18deg)}
 #gbframe .speaker i{width:4px;height:30px;border-radius:3px;background:#7a7e60;box-shadow:inset 0 0 0 1px #5a5e44}
-body.mobile[data-skin="gameboy"] .shell{padding:12px 58px 110px 58px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad{left:8px;width:46px;height:46px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad::before{left:14px;width:18px;height:46px}
-body.mobile[data-skin="gameboy"] #gbframe .dpad::after{top:14px;width:46px;height:18px}
-body.mobile[data-skin="gameboy"] #gbframe .ab{right:6px;width:56px}
+/* interactive Game Boy controls — the device borders are real buttons (per the original spec) */
+#gbframe .ab span,#gbframe .ss span,#gbframe .gbhit{pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#gbframe .gbhit{position:absolute}
+#gbframe .ab span.gbpress{filter:brightness(1.3);transform:translateY(2px)}
+#gbframe .ss span.gbpress{filter:brightness(1.3);transform:translateY(1px)}
+#led.gbflash{background:#fff;box-shadow:0 0 16px var(--accent),0 0 7px #fff}
+/* authentic DMG screen: chunky olive bezel + red power LED */
+body[data-skin="gameboy"] .screen{border-color:#3a3e2c;border-width:3px;box-shadow:inset 0 0 0 6px #6b6f50, inset 0 0 22px #0009}
+body[data-skin="gameboy"] .screen::before{content:"";position:absolute;left:9px;top:9px;width:7px;height:7px;border-radius:50%;background:#e23b3b;box-shadow:0 0 6px #e23b3b;z-index:4}
+/* Game Boy on mobile: vertical-handheld layout — full-width screen/list, controls in a bottom deck */
+body.mobile[data-skin="gameboy"] .shell{padding:14px 16px 186px 16px}
+body.mobile[data-skin="gameboy"] #gbframe .dpad{left:34px;top:auto;bottom:60px;transform:none;width:60px;height:60px;background:radial-gradient(circle,#3a3a42 0 8px,transparent 9px)}
+body.mobile[data-skin="gameboy"] #gbframe .dpad::before{left:21px;top:0;width:18px;height:60px}
+body.mobile[data-skin="gameboy"] #gbframe .dpad::after{left:0;top:21px;width:60px;height:18px}
+body.mobile[data-skin="gameboy"] #gbframe .ab{right:28px;top:auto;bottom:66px;width:86px;height:62px;transform:rotate(-18deg)}
+body.mobile[data-skin="gameboy"] #gbframe .ab .abtn{right:0;top:0}
+body.mobile[data-skin="gameboy"] #gbframe .ab .bbtn{left:0;top:26px}
+body.mobile[data-skin="gameboy"] #gbframe .ss{bottom:22px}
 body.mobile[data-skin="gameboy"] #gbframe .speaker{display:none}
 
 /* tooltip */
@@ -247,7 +260,7 @@ body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 
 @media(max-width:700px){
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
   body{display:block;place-items:initial;min-height:100vh;min-height:100dvh}
-  .wrap{width:96vw;margin:0 auto}
+  .wrap{width:90vw;margin:4vh auto}
   .main{grid-template-columns:1fr}
   .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
@@ -264,7 +277,9 @@ body.mobile{
   height:auto;min-height:100vh;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;
   padding:calc(env(safe-area-inset-top) + 8px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 16px) env(safe-area-inset-left);
 }
-body.mobile .wrap{margin:0 auto}
+body.mobile .wrap{width:min(440px,86vw);margin:6vh auto}
+/* readability scrim behind the NOW PLAYING overlay on busy mobile scenes */
+body.mobile .nowrap{background:linear-gradient(transparent,rgba(4,6,12,.6) 38%);padding-top:14px;border-radius:0 0 10px 10px}
 body.mobile #cur{display:none}
 body.mobile button.btn{padding:11px 15px;font-size:22px}
 body.mobile .play{padding:11px 22px}
@@ -905,7 +920,7 @@ function bgInit(){ const W=bcv.width,H=bcv.height;
   bgCity=[]; let x=-10; while(x<W){ const bw=40+Math.random()*96, bh=H*(.22+Math.random()*.5); bgCity.push({x,w:bw,h:bh,seed:(Math.random()*1e4)|0,neon:Math.random()<.24}); x+=bw+5+Math.random()*12; }
   bgRainD=[]; for(let i=0;i<240;i++) bgRainD.push({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*16,s:7+Math.random()*9});
   bgMtx=[]; const cols=Math.floor(W/28); for(let i=0;i<cols;i++) bgMtx.push({x:i*28+6,y:Math.random()*H,sp:1.2+Math.random()*2.2,trick:Math.random()<.16});
-  bgTorch=[]; [0.05,0.22,0.5,0.78,0.95].forEach(fr=>[H*.3,H*.58,H*.84].forEach(yy=>bgTorch.push({x:W*fr,y:yy,ph:Math.random()*6})));
+  bgTorch=[]; [0.07,0.93].forEach(fr=>[0.28,0.54,0.80].forEach(fy=>bgTorch.push({x:W*fr,y:H*fy,ph:Math.random()*6})));
   bgFire=[]; for(let i=0;i<26;i++) bgFire.push({x:Math.random()*W,y:H*.4+Math.random()*H*.55,r:1+Math.random()*2,a:Math.random()*6,sp:.15+Math.random()*.35});
   bgComet={x:W,y:H*.18}; bgGb={x:W*.16,y:H*.5,vx:.5};
   bgHills=[{h:.2,o:42,c:"#0b1430"},{h:.13,o:13,c:"#0d1838"},{h:.07,o:71,c:"#11214a"}];
@@ -924,8 +939,18 @@ function drawBgStatic(){ const c=bgsx,W=bgStatic.width,H=bgStatic.height; c.clea
     for(let i=-10;i<=10;i++){ c.beginPath(); c.moveTo(W/2+i*16,hy); c.lineTo(W/2+i*(W/16),H); c.stroke(); }
     const bx=W*.5-150, by=H*.5-54, bw=300, bh=124; c.fillStyle="rgba(36,20,54,.5)"; c.strokeStyle="rgba(255,160,220,.4)"; c.lineWidth=2; c.fillRect(bx,by,bw,bh); c.strokeRect(bx,by,bw,bh);
     [bx+66,bx+bw-66].forEach(cxp=>{ c.fillStyle="rgba(18,10,30,.7)"; c.beginPath(); c.arc(cxp,by+64,36,0,7); c.fill(); c.strokeStyle="rgba(140,216,255,.5)"; c.beginPath(); c.arc(cxp,by+64,36,0,7); c.stroke(); c.beginPath(); c.arc(cxp,by+64,13,0,7); c.stroke(); }); c.strokeStyle="rgba(255,160,220,.3)"; c.strokeRect(bx+bw*.5-30,by+10,60,16);
-  } else if(k==="dungeon"){ c.strokeStyle="rgba(60,40,22,.22)"; for(let by2=H*.18;by2<H;by2+=34){ const offs=(Math.floor(by2/34)%2)*32; for(let bx2=-32;bx2<W;bx2+=64) c.strokeRect(bx2+offs,by2,64,34); }
-    for(const tr of bgTorch){ c.fillStyle="#2a1a0e"; c.fillRect(tr.x-3,tr.y,6,26); }
+  } else if(k==="dungeon"){
+    const rg=c.createLinearGradient(0,0,0,H); rg.addColorStop(0,"#0a0604"); rg.addColorStop(.5,"#160d07"); rg.addColorStop(1,"#0b0705"); c.fillStyle=rg; c.fillRect(0,0,W,H);
+    for(let i=0;i<170;i++){ const x=(i*149.3)%W, y=(i*97.7)%H, r=10+((i*53)%48); c.fillStyle="rgba(56,38,22,"+(0.05+((i*11)%6)/80).toFixed(3)+")"; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); }
+    c.strokeStyle="rgba(0,0,0,.4)"; c.lineWidth=2; for(let i=0;i<28;i++){ const x0=(i*131)%W, y0=(i*73)%H; c.beginPath(); c.moveTo(x0,y0); c.lineTo(x0+30-((i*17)%60), y0+44+((i*13)%50)); c.stroke(); }
+    const ct=H*0.14; c.fillStyle="#080503"; c.fillRect(0,0,W,ct);
+    for(let x=-10;x<W+10;x+=46+((Math.abs(x)*7)%24)){ const len=ct*1.2+((Math.abs(x)*53)%5)/5*H*0.16; c.fillStyle="#0a0604"; c.beginPath(); c.moveTo(x-14,ct); c.lineTo(x,ct+len); c.lineTo(x+14,ct); c.closePath(); c.fill(); }
+    c.fillStyle="rgba(0,0,0,.45)"; c.fillRect(0,ct,W,3);
+    const fly=H*0.88; c.fillStyle="#080503"; c.fillRect(0,fly,W,H-fly);
+    for(let x=-10;x<W+10;x+=52+((Math.abs(x)*5)%30)){ const len=H*0.05+((Math.abs(x)*37)%5)/5*H*0.12; c.fillStyle="#0a0604"; c.beginPath(); c.moveTo(x-17,fly+4); c.lineTo(x,fly-len); c.lineTo(x+17,fly+4); c.closePath(); c.fill(); }
+    c.fillStyle="#0a0604"; c.beginPath(); c.moveTo(0,0); c.lineTo(W*0.05,0); for(let y=0;y<=H;y+=40) c.lineTo(W*0.035+Math.sin(y*0.05)*W*0.016, y); c.lineTo(0,H); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(W,0); c.lineTo(W*0.95,0); for(let y=0;y<=H;y+=40) c.lineTo(W*0.965+Math.sin(y*0.05+1)*W*0.016, y); c.lineTo(W,H); c.closePath(); c.fill();
+    for(const tr of bgTorch){ c.fillStyle="#0c0905"; c.fillRect(tr.x-4,tr.y-4,8,30); c.fillStyle="#241a0e"; c.fillRect(tr.x-7,tr.y-12,14,9); c.fillStyle="#1c130a"; c.fillRect(tr.x-8,tr.y+22,16,5); }
   } else if(k==="pixel"){ const sunx=W*.78,suny=H*.3,R=Math.min(W,H)*.16; const sg=c.createLinearGradient(sunx,suny-R,sunx,suny+R); sg.addColorStop(0,"#ffd24a"); sg.addColorStop(1,"#ff7ad0"); c.fillStyle=sg;
     for(let yy=-R;yy<R;yy+=6){ const ww=Math.sqrt(Math.max(0,R*R-yy*yy)); c.fillRect(sunx-ww,suny+yy,ww*2,4);}
     for(const hl of bgHills){ c.fillStyle=hl.c; c.beginPath(); c.moveTo(0,H); const hh=H*(1-hl.h); for(let xx=0;xx<=W;xx+=24){ const yv=hh+Math.sin(xx*.01+hl.o)*16; c.lineTo(xx, Math.round(yv/8)*8);} c.lineTo(W,H); c.closePath(); c.fill(); }
@@ -947,9 +972,16 @@ function bgFx(pulse){ const W=bcv.width,H=bcv.height; if(bgSec!==sectionKey||!bg
     const py=H*.9; const grd=bctx.createLinearGradient(0,py,0,H); grd.addColorStop(0,"rgba(120,160,210,.08)"); grd.addColorStop(1,"rgba(40,70,110,.18)"); bctx.fillStyle=grd; bctx.fillRect(0,py,W,H-py);
     bctx.strokeStyle="rgba(170,205,255,.10)"; bctx.lineWidth=1; for(let i=0;i<7;i++){ const rr=(phase*26+i*90)%200; bctx.beginPath(); bctx.ellipse(((i*W/7)+(phase*5)%(W/7)), py+(H-py)*.5, rr, rr*.18,0,0,7); bctx.stroke(); } }
   else if(k==="matrix"){ bctx.drawImage(bgStatic,0,0); bctx.font="20px monospace"; bctx.fillStyle="rgba(120,255,170,.5)"; for(const m of bgMtx){ if(!m.trick)continue; bctx.fillText(Math.random()<.5?"0":"1", m.x, m.y); m.y+=m.sp*(playing?2.2:1.2); if(m.y>H+10)m.y=-10; } }
-  else if(k==="dungeon"){ bctx.drawImage(bgStatic,0,0); for(const tr of bgTorch){ const fl=.7+.3*Math.sin(phase*4+tr.ph)+.08*Math.random();
-    const g=bctx.createRadialGradient(tr.x,tr.y-8,2,tr.x,tr.y-8,82*fl); g.addColorStop(0,"rgba(255,170,60,"+(0.4*fl).toFixed(2)+")"); g.addColorStop(1,"rgba(255,120,30,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.arc(tr.x,tr.y-8,82*fl,0,7); bctx.fill();
-    bctx.fillStyle="rgba(255,190,70,"+(0.85*fl).toFixed(2)+")"; bctx.beginPath(); bctx.moveTo(tr.x,tr.y-18*fl); bctx.lineTo(tr.x-6,tr.y+2); bctx.lineTo(tr.x+6,tr.y+2); bctx.closePath(); bctx.fill(); } }
+  else if(k==="dungeon"){ bctx.drawImage(bgStatic,0,0);
+    bctx.globalCompositeOperation="lighter";
+    for(const tr of bgTorch){ const fl=.78+.22*Math.sin(phase*4+tr.ph)+.06*Math.random(), tx=tr.x, ty=tr.y-12;
+      const g=bctx.createRadialGradient(tx,ty,2,tx,ty,160*fl); g.addColorStop(0,"rgba(255,185,90,"+(0.5*fl).toFixed(2)+")"); g.addColorStop(.4,"rgba(255,120,40,"+(0.16*fl).toFixed(2)+")"); g.addColorStop(1,"rgba(120,40,10,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.arc(tx,ty,160*fl,0,7); bctx.fill();
+      const h0=30*fl, sway=Math.sin(phase*6+tr.ph)*3;
+      bctx.fillStyle="rgba(255,110,20,.85)"; bctx.beginPath(); bctx.moveTo(tx,ty-h0); bctx.quadraticCurveTo(tx+8,ty-h0*.4,tx+6,ty+4); bctx.lineTo(tx-6,ty+4); bctx.quadraticCurveTo(tx-8,ty-h0*.4,tx,ty-h0); bctx.fill();
+      bctx.fillStyle="rgba(255,195,70,.9)"; bctx.beginPath(); bctx.moveTo(tx+sway*.4,ty-h0*.66); bctx.quadraticCurveTo(tx+5,ty-h0*.25,tx+3.5,ty+3); bctx.lineTo(tx-3.5,ty+3); bctx.quadraticCurveTo(tx-5,ty-h0*.25,tx+sway*.4,ty-h0*.66); bctx.fill();
+      bctx.fillStyle="rgba(255,248,205,.95)"; bctx.beginPath(); bctx.ellipse(tx,ty-h0*.22,2.3,h0*.22,0,0,7); bctx.fill(); }
+    bctx.globalCompositeOperation="source-over";
+    for(const e of bgFire){ const a=.3+.5*Math.abs(Math.sin(phase*.8+e.a)); bctx.fillStyle="rgba(255,150,60,"+a.toFixed(2)+")"; bctx.fillRect(e.x,e.y,e.r,e.r); e.y-=e.sp*(playing?1.5:.8); e.x+=Math.sin(phase*.5+e.a)*.4; if(e.y<H*.12){e.y=H*.9;e.x=Math.random()*W;} } }
   else if(k==="vapor"){ bctx.drawImage(bgStatic,0,0); const sx=W/2,sy=H*.4,R=Math.min(W,H)*.28;
     const sg=bctx.createRadialGradient(sx,sy,8,sx,sy,R); sg.addColorStop(0,"rgba(255,180,210,.4)"); sg.addColorStop(.6,"rgba(255,120,180,.18)"); sg.addColorStop(1,"rgba(120,80,200,0)"); bctx.fillStyle=sg; bctx.beginPath(); bctx.arc(sx,sy,R,0,7); bctx.fill();
     const bx=W*.5-150, by=H*.5-54, bw=300, bh=124, n=18, gap=4, innerW=bw-40, bwid=(innerW-gap*(n-1))/n, baseY=by+bh-16;
@@ -1045,7 +1077,24 @@ document.addEventListener("pointerdown",e=>{ if(!cmenu.contains(e.target)) cmenu
 cmenu.onclick=e=>{ const a=e.target.getAttribute&&e.target.getAttribute("data-a"); cmenu.style.display="none"; if(!a)return;
   if(a==="play")playing?stop():start(); else if(a==="next"){setStation(STATIONS.indexOf(station)+1);if(!playing)start();} else if(a==="prev"){setStation(STATIONS.indexOf(station)-1);if(!playing)start();} else if(a==="shuf")shuffle(); else if(a==="pip")popOut(); };
 
-setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); sizeBg(); draw();
+/* Game Boy: borders act as a real controller (per the original "controllers like the buttons" spec).
+   A = play/pause · B = reshuffle · D-pad ←/→ = station · D-pad ▲/▼ = volume · SELECT/START = section */
+function gbStation(dir){ setStation(STATIONS.indexOf(station)+dir); if(!playing)start(); }
+function gbSection(dir){ const i=SECTION_ORDER.indexOf(sectionKey); setSection(SECTION_ORDER[(i+dir+SECTION_ORDER.length)%SECTION_ORDER.length]); }
+function gbVol(d){ const inp=$("vol"); const v=Math.max(0,Math.min(100,Math.round((+inp.value)+d))); inp.value=v; volume=v/100; if(master&&playing)master.gain.value=volume; }
+function initGbControls(){ const gb=$("gbframe"); if(!gb) return; const led=$("led");
+  const press=el=>{ if(el){ el.classList.add("gbpress"); setTimeout(()=>el.classList.remove("gbpress"),130); } if(led){ led.classList.add("gbflash"); setTimeout(()=>led.classList.remove("gbflash"),150); } };
+  const bind=(el,fn)=>{ if(!el)return; el.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); press(el); fn(); }); };
+  bind(gb.querySelector(".abtn"), ()=>{ playing?stop():start(); });
+  bind(gb.querySelector(".bbtn"), ()=>{ shuffle(); if(!playing)start(); });
+  const ss=gb.querySelectorAll(".ss span"); bind(ss[0], ()=>gbSection(-1)); bind(ss[1], ()=>gbSection(1));
+  const dpad=gb.querySelector(".dpad");
+  if(dpad){ const mk=(css,fn)=>{ const z=document.createElement("div"); z.className="gbhit"; z.style.cssText=css; dpad.appendChild(z); bind(z,fn); };
+    mk("left:0;top:0;width:100%;height:40%", ()=>gbVol(7));
+    mk("left:0;bottom:0;width:100%;height:40%", ()=>gbVol(-7));
+    mk("left:0;top:30%;width:40%;height:40%", ()=>gbStation(-1));
+    mk("right:0;top:30%;width:40%;height:40%", ()=>gbStation(1)); } }
+setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); initGbControls(); sizeBg(); draw();
 </script>
 <script>
 (() => {
