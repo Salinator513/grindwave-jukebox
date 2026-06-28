@@ -77,7 +77,7 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;position:relative}
 .emblem{display:none;align-items:center}
 .emblem svg{width:26px;height:26px;filter:drop-shadow(0 0 7px #ffe60a)}
-.logo{font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:1px;color:#fff;text-shadow:0 0 8px var(--accent), 3px 3px 0 var(--accent2);}
+.logo{font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:1px;color:#fff;text-shadow:0 0 8px var(--accent), 2px 2px 0 rgba(0,0,0,.5);}
 .logo b{color:var(--accent)}
 .tag{font-size:20px;color:var(--dim);margin-left:2px}
 .tag .blink{animation:blink 1s steps(1) infinite;color:var(--accent)}
@@ -304,7 +304,7 @@ body.mobile .tabs::-webkit-scrollbar{display:none}
 body.mobile .tab{font-size:8px;letter-spacing:.5px;padding:6px 9px 8px;border-width:1px;border-radius:8px 8px 0 0}
 /* topbar / titles — way smaller */
 body.mobile .topbar{gap:7px;margin-bottom:8px}
-body.mobile .logo{font-size:12px}
+body.mobile .logo{font-size:12px;text-shadow:0 0 7px var(--accent)}  /* single soft glow — the desktop hard-offset shadow ghosts at this size */
 body.mobile .tag{font-size:12px}
 body.mobile .power{font-size:11px;gap:5px}
 body.mobile .led{width:7px;height:7px}
