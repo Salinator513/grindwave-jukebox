@@ -61,8 +61,6 @@ body[data-skin="rain"] #rain{opacity:.45}
 body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 
 .wrap{display:flex;flex-direction:column;align-items:stretch;width:min(880px,94vw)}
-/* shrink the whole box to half its length AND half its width, kept centered (desktop) */
-body:not(.mobile) .wrap{transform:scale(.5);transform-origin:center center}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-left:6px;max-width:100%}
 .tab{font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;color:var(--dim);
   background:#0a1228;border:2px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;padding:8px 11px 11px;
@@ -294,11 +292,13 @@ body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 
   .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
 }
-body.mobile{ overflow-x:hidden;overflow-y:auto;display:block;place-items:initial;
+body.mobile{ overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;align-items:center;place-items:initial;
   height:auto;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;font-size:14px;
   padding:calc(env(safe-area-inset-top) + 4px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 10px) env(safe-area-inset-left); }
 body.mobile #cur{display:none}
-body.mobile .wrap{width:min(430px,95vw);margin:1.5vh auto 2.5vh}
+body.mobile .wrap{width:min(430px,95vw);margin:0 auto}
+/* halve the box (both length AND width) and keep it centered on screen — taken literally */
+body.mobile .wrap{transform:scale(.5);transform-origin:center center}
 /* tabs — tiny, edge-faded horizontal scroll */
 body.mobile .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;padding-left:3px;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);
