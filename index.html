@@ -103,8 +103,8 @@ body:not(.mobile) .screen:hover .chips{opacity:1;transform:none}
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .list{background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:6px;overflow-y:auto;max-height:250px;
   cursor:grab;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain;
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 13px,#000 calc(100% - 13px),transparent 100%);
-  mask-image:linear-gradient(180deg,transparent 0,#000 13px,#000 calc(100% - 13px),transparent 100%)}
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%)}
 .list::-webkit-scrollbar{display:none}
 .list.grabbing{cursor:grabbing}
 .row{position:relative;display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:19px;color:var(--ink);transition:background .12s, transform .12s}
@@ -113,25 +113,26 @@ body:not(.mobile) .screen:hover .chips{opacity:1;transform:none}
 .dot{width:11px;height:11px;border-radius:3px;flex:none;box-shadow:0 0 8px currentColor}
 .row .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .meta{font-size:14px;color:var(--dim)}
-.row .dur{font-size:13px;color:#6f8093;opacity:0;transition:opacity .14s;min-width:34px;text-align:right}
-.row:hover .dur{opacity:1}
+.row .dur{display:none}  /* per-row duration removed — redundant with the NOW PLAYING LEN chip + row tooltip; frees width so names don't truncate */
 .row.active .eq{display:flex}
 .eq{display:none;gap:2px;align-items:flex-end;height:14px}
 .eq i{width:3px;background:var(--accent);animation:eq .9s ease-in-out infinite}
 .eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
 @keyframes eq{0%,100%{height:4px}50%{height:14px}}
 
-.controls{display:flex;align-items:center;gap:8px;background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:10px}
-button.btn{font-family:'VT323',monospace;font-size:20px;color:#02060f;cursor:pointer;background:linear-gradient(180deg,#bfefff,var(--accent));border:none;border-radius:9px;padding:6px 11px;box-shadow:0 3px 0 #0a3a52, 0 0 14px color-mix(in srgb,var(--accent) 60%,transparent);text-shadow:0 1px 0 #fff8;transition:transform .06s, box-shadow .12s}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:10px}
+button.btn{font-family:'VT323',monospace;font-size:20px;color:#02060f;cursor:pointer;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 32%,#ffffff),var(--accent));border:none;border-radius:9px;padding:6px 11px;box-shadow:0 3px 0 color-mix(in srgb,var(--accent) 40%,#000), 0 0 14px color-mix(in srgb,var(--accent) 60%,transparent);text-shadow:0 1px 0 #fff8;transition:transform .06s, box-shadow .12s}
 button.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0a3a52}
 button.btn.ghost{background:#0e1838;color:var(--ink);box-shadow:0 3px 0 #060c1e;border:1px solid var(--line)}
 .play{font-size:22px;padding:6px 15px}
-.vol{display:flex;align-items:center;gap:7px;margin-left:auto;font-size:17px;color:var(--dim)}
+.vol{display:flex;align-items:center;gap:7px;margin-left:auto;min-width:0;font-size:17px;color:var(--dim)}
 input[type=range]{-webkit-appearance:none;appearance:none;width:92px;height:8px;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:18px;border-radius:3px;background:#fff;box-shadow:0 0 8px var(--accent);cursor:pointer}
 .hint{margin-top:9px;font-size:16px;color:var(--dim);text-align:center;letter-spacing:1px}
 .hint b{color:var(--accent)}
-.marquee{overflow:hidden;white-space:nowrap;margin-top:2px}
+.marquee{overflow:hidden;white-space:nowrap;margin-top:2px;width:100%;max-width:100%;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 90%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 7%,#000 90%,transparent)}
 .marquee span{display:inline-block;padding-left:100%;animation:mq 20s linear infinite;color:var(--dim);font-size:16px}
 @keyframes mq{to{transform:translateX(-100%)}}
 
@@ -153,7 +154,7 @@ body[data-skin="rain"] .logo{text-shadow:0 0 8px var(--accent), 2px 2px 0 #2b4a7
 /* vaporwave */
 body[data-skin="vapor"]{background:linear-gradient(180deg,#2a1840,#3a1d52 40%,#0c1530);}
 body[data-skin="vapor"] .shell{border-radius:20px;background:linear-gradient(180deg,#2a1a44,#1a1030)}
-body[data-skin="vapor"] .logo{text-shadow:0 0 10px #ff9ed8, 3px 3px 0 #8ad8ff}
+body[data-skin="vapor"] .logo{text-shadow:0 0 10px #ff9ed8, 2px 2px 0 rgba(20,8,40,.6)}
 /* game boy DMG */
 body[data-skin="gameboy"]{background:linear-gradient(180deg,#142210,#0c1a0a);}
 body[data-skin="gameboy"]{--ink:#9bbc0f;--dim:#6a8f1a}
@@ -313,7 +314,7 @@ body.mobile .main{grid-template-columns:1fr;gap:9px}
 body.mobile .side{gap:8px}
 /* screen / visualizer + NOW PLAYING overlay */
 body.mobile #viz{height:126px}
-body.mobile .nowrap{left:10px;right:10px;bottom:8px;gap:1px;background:linear-gradient(transparent,rgba(4,6,12,.68) 44%);padding:16px 0 2px;border-radius:0 0 12px 12px}
+body.mobile .nowrap{left:8px;right:8px;bottom:8px;gap:1px;background:rgba(5,8,15,.62);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);padding:8px 11px;border-radius:11px;box-shadow:0 2px 12px rgba(0,0,0,.45)}  /* frosted card so the NOW PLAYING text never collides with the EQ bars behind it */
 body.mobile .np-label{font-size:9px;letter-spacing:1.5px}
 body.mobile .np-title{font-size:11px;word-break:break-word}
 body.mobile .np-mood{font-size:11px}
@@ -335,9 +336,9 @@ body.mobile input[type=range]{width:62%;height:10px}
 body.mobile .marquee{display:none}
 body.mobile .hint{display:none}
 /* a real focus vignette on mobile (the old one was dialled down to nothing) */
-body.mobile #vig{opacity:.55;box-shadow:inset 0 0 120px 42px rgba(0,0,0,.72), inset 0 0 48px 14px rgba(0,0,0,.55);
-  background:radial-gradient(132% 120% at 50% 44%, transparent 40%, rgba(0,0,0,.6) 100%)}
-body.mobile #vig.big{opacity:.92;box-shadow:inset 0 0 210px 95px rgba(0,0,0,.93)}
+body.mobile #vig{opacity:.66;box-shadow:inset 0 0 140px 60px rgba(0,0,0,.8), inset 0 0 60px 18px rgba(0,0,0,.6);
+  background:radial-gradient(125% 112% at 50% 44%, transparent 34%, rgba(0,0,0,.72) 100%)}
+body.mobile #vig.big{opacity:.94;box-shadow:inset 0 0 220px 100px rgba(0,0,0,.94)}
 body.mobile #bgcanvas{opacity:.9}
 body.mobile #bg::before,body.mobile #bg::after{opacity:.30;filter:blur(58px)}
 /* Game Boy keeps its function labels off the cramped mobile deck */
@@ -345,7 +346,7 @@ body.mobile #gbframe .ab span::after{display:none}
 /* ---- glass / blended-border treatment for every skin EXCEPT Game Boy (stays opaque plastic) ---- */
 body.mobile:not([data-skin="gameboy"]) .shell{padding:12px 12px 14px;border-width:1px;border-radius:16px;
   border-color:color-mix(in srgb,var(--accent) 34%,transparent);
-  background:color-mix(in srgb,var(--panel) 62%,transparent);
+  background:color-mix(in srgb,var(--pbg) 66%,transparent);  /* --pbg is per-skin (warm for dungeon/lofi, cool for rain/space) so the glass matches the scene instead of going navy */
   -webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);
   box-shadow:0 10px 34px rgba(0,0,0,.5),inset 0 0 0 1px #ffffff14}
 body.mobile:not([data-skin="gameboy"]) .screen{border-width:1px;border-radius:12px;
@@ -354,7 +355,9 @@ body.mobile:not([data-skin="gameboy"]) .screen{border-width:1px;border-radius:12
   -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 body.mobile:not([data-skin="gameboy"]) .list{border:none;border-radius:12px;padding:4px;background:color-mix(in srgb,var(--pbg) 48%,transparent)}
 body.mobile:not([data-skin="gameboy"]) .controls{border:none;border-radius:12px;background:color-mix(in srgb,var(--pbg) 48%,transparent)}
-body.mobile:not([data-skin="gameboy"]) .tab{background:color-mix(in srgb,var(--panel) 55%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+body.mobile:not([data-skin="gameboy"]) .tab{background:color-mix(in srgb,var(--pbg) 56%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+body.mobile .row.active{box-shadow:inset 3px 0 0 var(--accent)}  /* soft left-accent marker instead of the boxy full ring */
+body.mobile .row .meta{font-size:10px;opacity:.75}
 </style>
 </head>
 <body>
@@ -399,7 +402,7 @@ body.mobile:not([data-skin="gameboy"]) .tab{background:color-mix(in srgb,var(--p
       <div class="marquee"><span id="mqText">Every loop is freshly composed. Yes, even the questionable ones.</span></div>
     </div>
   </div>
-  <div class="hint"><b>SPACE</b> play/pause &nbsp;·&nbsp; <b>← →</b> change station &nbsp;·&nbsp; <b>R</b> reshuffle &nbsp;·&nbsp; drag the list to scroll</div>
+  <div class="hint"><b>SPACE</b> play/pause &nbsp;·&nbsp; <b>← →</b> change station &nbsp;·&nbsp; <b>R</b> reshuffle</div>
 </div>
 </div>
 
