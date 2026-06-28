@@ -212,6 +212,13 @@ body[data-skin="cyber"] #cyberfx{display:block}
 @keyframes blob1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(22vw,12vh) scale(1.25)}}
 @keyframes blob2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-18vw,-10vh) scale(.85)}}
 
+/* AI-generated per-station raster art — fixed full-viewport so it always covers the screen even when the box scrolls off (iPhone), crossfaded between two stacked layers */
+#bgwrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#05060a}
+.bglayer{position:absolute;inset:-3%;background-size:cover;background-position:center;opacity:0;transition:opacity .7s ease;will-change:opacity}
+.bglayer.on{opacity:1}
+#bgscrim{position:absolute;inset:0;background:radial-gradient(125% 125% at 50% 38%, transparent 38%, rgba(0,0,0,.5) 100%)}
+body.mobile #bgscrim{background:radial-gradient(140% 140% at 50% 42%, transparent 30%, rgba(0,0,0,.58) 100%)}
+
 /* broader-background canvas (per-section big graphics) */
 #bgcanvas{position:fixed;inset:0;z-index:1;pointer-events:none}
 
@@ -294,6 +301,7 @@ body.mobile #bgcanvas{opacity:.9}
 </head>
 <body>
 <div id="bg"></div>
+<div id="bgwrap"><div class="bglayer" id="bgA"></div><div class="bglayer" id="bgB"></div><div id="bgscrim"></div></div>
 <canvas id="bgcanvas"></canvas>
 <div id="vig"></div>
 <div id="rain"></div>
@@ -777,7 +785,7 @@ function setStation(i){ station=STATIONS[(i+STATIONS.length)%STATIONS.length]; s
   applyTheme(); curStep=0; loopN=0; beatTimes=[]; if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); setRainLevel(); } renderList(); setUI(); updateMedia(); }
 function shuffle(){ salt=(salt+0x9e3779b1)>>>0; curStep=0; if(playing){ swapBus(); nextTime=ctx.currentTime+0.04; regen(); } flash(); }
 function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
-  document.body.dataset.skin=key; renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
+  document.body.dataset.skin=key; setBgImage(key); renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
   salt=(Math.random()*4294967296)>>>0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI(); fxReset();
   if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); startAmbience(); } updateMedia(); }
 
@@ -913,6 +921,12 @@ function beatPulse(){ if(!ctx) return 0; let p=0; const now=ctx.currentTime; for
 /* ---- broader per-section background graphics (cached statics + one subtle animated part; rain fully animates) ---- */
 const bcv=$("bgcanvas"), bctx=bcv.getContext("2d");
 const bgStatic=document.createElement("canvas"); const bgsx=bgStatic.getContext("2d");
+/* AI raster art crossfade between two stacked fixed layers (#bgA/#bgB) */
+let bgCur=null;
+function setBgImage(key){ const a=$("bgA"), b=$("bgB"); if(!a||!b) return;
+  const show = (bgCur===a) ? b : a, hide = (bgCur===a) ? a : b;
+  show.style.backgroundImage = "url(bg/"+key+".webp)";
+  show.classList.add("on"); hide.classList.remove("on"); bgCur=show; }
 let bgSec=null, bgReady=false, bgCity=[], bgRainD=[], bgMtx=[], bgTorch=[], bgFire=[], bgComet=null, bgGb=null, bgHills=[];
 function sizeBg(){ bcv.width=innerWidth; bcv.height=innerHeight; bgStatic.width=innerWidth; bgStatic.height=innerHeight; bgReady=false; }
 addEventListener("resize", sizeBg);
@@ -925,7 +939,8 @@ function bgInit(){ const W=bcv.width,H=bcv.height;
   bgComet={x:W,y:H*.18}; bgGb={x:W*.16,y:H*.5,vx:.5};
   bgHills=[{h:.2,o:42,c:"#0b1430"},{h:.13,o:13,c:"#0d1838"},{h:.07,o:71,c:"#11214a"}];
   drawBgStatic(); bgReady=true; }
-function drawBgStatic(){ const c=bgsx,W=bgStatic.width,H=bgStatic.height; c.clearRect(0,0,W,H); const k=sectionKey;
+function drawBgStatic(){ bgsx.clearRect(0,0,bgStatic.width,bgStatic.height); return; /* AI raster art (#bgwrap) now provides the scene; legacy procedural art kept below but unused */
+  const c=bgsx,W=bgStatic.width,H=bgStatic.height; const k=sectionKey;
   if(k==="cyber"){ const hz=H*.82;
     for(const b of bgCity){ c.fillStyle="#07070c"; c.fillRect(b.x,hz-b.h,b.w,b.h+(H-hz)); c.strokeStyle="rgba(255,230,10,.18)"; c.strokeRect(b.x+.5,hz-b.h+.5,b.w-1,b.h);
       for(let wy=hz-b.h+10; wy<hz-8; wy+=12) for(let wx=b.x+7; wx<b.x+b.w-7; wx+=10){ if(((wx*7+wy*13+b.seed)%41)<17){ c.fillStyle=(wx%2?"rgba(255,230,10,.45)":"rgba(255,46,110,.45)"); c.fillRect(wx,wy,4,6); } }
@@ -964,34 +979,21 @@ function drawBgStatic(){ const c=bgsx,W=bgStatic.width,H=bgStatic.height; c.clea
   } else if(k==="space"){ const px=W*.74,py=H*.4,R=Math.min(W,H)*.2; c.fillStyle="rgba(220,210,255,.7)"; for(let i=0;i<140;i++){ c.fillRect((i*W*.137)%W,(i*i*37)%H,1.4,1.4);}
     const pg=c.createRadialGradient(px-R*.3,py-R*.3,R*.2,px,py,R); pg.addColorStop(0,"#3a2a6a"); pg.addColorStop(1,"#150f30"); c.fillStyle=pg; c.beginPath(); c.arc(px,py,R,0,7); c.fill();
     c.save(); c.translate(px,py); c.rotate(-.4); c.strokeStyle="rgba(177,140,255,.35)"; c.lineWidth=6; c.beginPath(); c.ellipse(0,0,R*1.7,R*.5,0,0,7); c.stroke(); c.restore(); } }
+/* motion-only ambient overlays layered OVER the AI raster art (#bgwrap); no opaque scene drawing */
 function bgFx(pulse){ const W=bcv.width,H=bcv.height; if(bgSec!==sectionKey||!bgReady){ bgSec=sectionKey; bgInit(); } bctx.clearRect(0,0,W,H); const k=sectionKey;
-  if(k==="cyber"){ bctx.drawImage(bgStatic,0,0); const hz=H*.82;
-    bctx.fillStyle="rgba(255,230,10,"+(0.25+0.25*Math.abs(Math.sin(phase*.6))).toFixed(2)+")"; for(const b of bgCity){ if(b.seed%3)continue; bctx.fillRect(b.x+b.w/2,hz-b.h+14,4,6); }
-    const lx=W*.5+Math.sin(phase*.14)*W*.42; const g=bctx.createLinearGradient(lx,0,lx,hz); g.addColorStop(0,"rgba(0,229,255,.06)"); g.addColorStop(1,"rgba(0,229,255,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.moveTo(lx,0); bctx.lineTo(lx-60,hz); bctx.lineTo(lx+60,hz); bctx.closePath(); bctx.fill(); }
-  else if(k==="rain"){ bctx.strokeStyle="rgba(150,195,255,.26)"; bctx.lineWidth=1.2; for(const d of bgRainD){ bctx.beginPath(); bctx.moveTo(d.x,d.y); bctx.lineTo(d.x-3,d.y+d.l); bctx.stroke(); d.y+=d.s+(playing?3:1); d.x-=1; if(d.y>H){d.y=-d.l;d.x=Math.random()*W;} }
-    const py=H*.9; const grd=bctx.createLinearGradient(0,py,0,H); grd.addColorStop(0,"rgba(120,160,210,.08)"); grd.addColorStop(1,"rgba(40,70,110,.18)"); bctx.fillStyle=grd; bctx.fillRect(0,py,W,H-py);
-    bctx.strokeStyle="rgba(170,205,255,.10)"; bctx.lineWidth=1; for(let i=0;i<7;i++){ const rr=(phase*26+i*90)%200; bctx.beginPath(); bctx.ellipse(((i*W/7)+(phase*5)%(W/7)), py+(H-py)*.5, rr, rr*.18,0,0,7); bctx.stroke(); } }
-  else if(k==="matrix"){ bctx.drawImage(bgStatic,0,0); bctx.font="20px monospace"; bctx.fillStyle="rgba(120,255,170,.5)"; for(const m of bgMtx){ if(!m.trick)continue; bctx.fillText(Math.random()<.5?"0":"1", m.x, m.y); m.y+=m.sp*(playing?2.2:1.2); if(m.y>H+10)m.y=-10; } }
-  else if(k==="dungeon"){ bctx.drawImage(bgStatic,0,0);
-    bctx.globalCompositeOperation="lighter";
-    for(const tr of bgTorch){ const fl=.78+.22*Math.sin(phase*4+tr.ph)+.06*Math.random(), tx=tr.x, ty=tr.y-12;
-      const g=bctx.createRadialGradient(tx,ty,2,tx,ty,160*fl); g.addColorStop(0,"rgba(255,185,90,"+(0.5*fl).toFixed(2)+")"); g.addColorStop(.4,"rgba(255,120,40,"+(0.16*fl).toFixed(2)+")"); g.addColorStop(1,"rgba(120,40,10,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.arc(tx,ty,160*fl,0,7); bctx.fill();
-      const h0=30*fl, sway=Math.sin(phase*6+tr.ph)*3;
-      bctx.fillStyle="rgba(255,110,20,.85)"; bctx.beginPath(); bctx.moveTo(tx,ty-h0); bctx.quadraticCurveTo(tx+8,ty-h0*.4,tx+6,ty+4); bctx.lineTo(tx-6,ty+4); bctx.quadraticCurveTo(tx-8,ty-h0*.4,tx,ty-h0); bctx.fill();
-      bctx.fillStyle="rgba(255,195,70,.9)"; bctx.beginPath(); bctx.moveTo(tx+sway*.4,ty-h0*.66); bctx.quadraticCurveTo(tx+5,ty-h0*.25,tx+3.5,ty+3); bctx.lineTo(tx-3.5,ty+3); bctx.quadraticCurveTo(tx-5,ty-h0*.25,tx+sway*.4,ty-h0*.66); bctx.fill();
-      bctx.fillStyle="rgba(255,248,205,.95)"; bctx.beginPath(); bctx.ellipse(tx,ty-h0*.22,2.3,h0*.22,0,0,7); bctx.fill(); }
-    bctx.globalCompositeOperation="source-over";
+  if(k==="cyber"){ const hz=H*.82; const lx=W*.5+Math.sin(phase*.14)*W*.42; const g=bctx.createLinearGradient(lx,0,lx,hz); g.addColorStop(0,"rgba(0,229,255,.05)"); g.addColorStop(1,"rgba(0,229,255,0)"); bctx.fillStyle=g; bctx.beginPath(); bctx.moveTo(lx,0); bctx.lineTo(lx-70,hz); bctx.lineTo(lx+70,hz); bctx.closePath(); bctx.fill(); }
+  else if(k==="rain"){ bctx.strokeStyle="rgba(150,195,255,.30)"; bctx.lineWidth=1.2; for(const d of bgRainD){ bctx.beginPath(); bctx.moveTo(d.x,d.y); bctx.lineTo(d.x-3,d.y+d.l); bctx.stroke(); d.y+=d.s+(playing?3:1); d.x-=1; if(d.y>H){d.y=-d.l;d.x=Math.random()*W;} }
+    const py=H*.9; bctx.strokeStyle="rgba(170,205,255,.10)"; bctx.lineWidth=1; for(let i=0;i<7;i++){ const rr=(phase*26+i*90)%200; bctx.beginPath(); bctx.ellipse(((i*W/7)+(phase*5)%(W/7)), py+(H-py)*.5, rr, rr*.18,0,0,7); bctx.stroke(); } }
+  else if(k==="matrix"){ bctx.font="20px monospace"; bctx.fillStyle="rgba(150,255,190,.55)"; for(const m of bgMtx){ if(!m.trick)continue; bctx.fillText(Math.random()<.5?"0":"1", m.x, m.y); m.y+=m.sp*(playing?2.2:1.2); if(m.y>H+10)m.y=-10; } }
+  else if(k==="dungeon"){ bctx.fillStyle="rgba(255,120,30,"+(0.04+0.04*Math.abs(Math.sin(phase*.7))).toFixed(3)+")"; bctx.fillRect(0,0,W,H);
     for(const e of bgFire){ const a=.3+.5*Math.abs(Math.sin(phase*.8+e.a)); bctx.fillStyle="rgba(255,150,60,"+a.toFixed(2)+")"; bctx.fillRect(e.x,e.y,e.r,e.r); e.y-=e.sp*(playing?1.5:.8); e.x+=Math.sin(phase*.5+e.a)*.4; if(e.y<H*.12){e.y=H*.9;e.x=Math.random()*W;} } }
-  else if(k==="vapor"){ bctx.drawImage(bgStatic,0,0); const sx=W/2,sy=H*.4,R=Math.min(W,H)*.28;
-    const sg=bctx.createRadialGradient(sx,sy,8,sx,sy,R); sg.addColorStop(0,"rgba(255,180,210,.4)"); sg.addColorStop(.6,"rgba(255,120,180,.18)"); sg.addColorStop(1,"rgba(120,80,200,0)"); bctx.fillStyle=sg; bctx.beginPath(); bctx.arc(sx,sy,R,0,7); bctx.fill();
-    const bx=W*.5-150, by=H*.5-54, bw=300, bh=124, n=18, gap=4, innerW=bw-40, bwid=(innerW-gap*(n-1))/n, baseY=by+bh-16;
-    for(let i=0;i<n;i++){ const v=(playing&&analyser)? freqData[i*3+4]/255 : (Math.sin(phase*.5+i*.5)*.5+.5)*.3; const bhh=Math.max(3,v*(bh-34)*(1+pulse*.5)); const gx=bx+20+i*(bwid+gap); const gg=bctx.createLinearGradient(0,baseY-bhh,0,baseY); gg.addColorStop(0,"#8ad8ff"); gg.addColorStop(1,"#ff9ed8"); bctx.fillStyle=gg; bctx.fillRect(gx,baseY-bhh,bwid,bhh); } }
-  else if(k==="pixel"){ bctx.drawImage(bgStatic,0,0); const sunx=W*.78,suny=H*.3,R=Math.min(W,H)*.16, off=(phase*8)%8; bctx.fillStyle="rgba(255,255,255,.05)"; for(let yy=-R+off;yy<R;yy+=8){ const ww=Math.sqrt(Math.max(0,R*R-yy*yy)); bctx.fillRect(sunx-ww,suny+yy,ww*2,2);} }
-  else if(k==="gameboy"){ bctx.drawImage(bgStatic,0,0); const g=bgGb; g.x+=g.vx*(playing?1.4:.6); if(g.x>W*.84||g.x<W*.16)g.vx*=-1; const hop=Math.abs(Math.sin(phase*3))*14*(playing?1:.4), s=26, gy=g.y-hop;
-    bctx.fillStyle="rgba(48,98,48,.22)"; bctx.fillRect(g.x,gy,s,s); bctx.fillStyle="rgba(48,98,48,.34)"; bctx.fillRect(g.x+6,gy+6,5,5); bctx.fillRect(g.x+15,gy+6,5,5); bctx.fillRect(g.x+8,gy+16,10,4); }
-  else if(k==="lofi"){ bctx.drawImage(bgStatic,0,0); bctx.strokeStyle="rgba(230,210,180,.16)"; bctx.lineWidth=3; const cx0=W*.5, cy0=H*.82; for(let i=0;i<3;i++){ bctx.beginPath(); for(let t2=0;t2<=60;t2+=6){ const yy=cy0-t2*1.6, xx=cx0+(i-1)*16+Math.sin(t2*.15+phase*1.2+i)*10; t2?bctx.lineTo(xx,yy):bctx.moveTo(xx,yy);} bctx.stroke(); } }
-  else if(k==="forest"){ bctx.drawImage(bgStatic,0,0); for(const f of bgFire){ const a=.3+.5*Math.abs(Math.sin(phase*.8+f.a)); bctx.fillStyle="rgba(190,255,150,"+a.toFixed(2)+")"; bctx.beginPath(); bctx.arc(f.x,f.y,f.r,0,7); bctx.fill(); f.x+=Math.sin(phase*.3+f.a)*.4; f.y-=f.sp*.3; if(f.y<H*.32){f.y=H;f.x=Math.random()*W;} } }
-  else if(k==="space"){ bctx.drawImage(bgStatic,0,0); const c=bgComet; c.x-=1.1*(playing?1.4:.7); c.y+=.5*(playing?1.4:.7); if(c.x<-60){c.x=W+40;c.y=Math.random()*H*.4;}
+  else if(k==="vapor"){ bctx.fillStyle="rgba(255,200,235,.55)"; for(const e of bgFire){ bctx.fillRect(e.x,e.y,1.6,1.6); e.y-=e.sp*.5; e.x+=Math.sin(phase*.4+e.a)*.5; if(e.y<0){e.y=H;e.x=Math.random()*W;} } }
+  else if(k==="pixel"){ bctx.fillStyle="rgba(255,230,180,.4)"; for(const e of bgFire){ bctx.fillRect(e.x,e.y,1.4,1.4); e.x+=.25+e.sp*.3; e.y+=Math.sin(phase*.3+e.a)*.2; if(e.x>W){e.x=0;e.y=Math.random()*H;} } }
+  else if(k==="gameboy"){ const g=bgGb; g.x+=g.vx*(playing?1.4:.6); if(g.x>W*.84||g.x<W*.16)g.vx*=-1; const hop=Math.abs(Math.sin(phase*3))*14*(playing?1:.4), s=26, gy=g.y-hop;
+    bctx.fillStyle="rgba(15,56,15,.55)"; bctx.fillRect(g.x,gy,s,s); bctx.fillStyle="rgba(15,56,15,.8)"; bctx.fillRect(g.x+6,gy+6,5,5); bctx.fillRect(g.x+15,gy+6,5,5); bctx.fillRect(g.x+8,gy+16,10,4); }
+  else if(k==="lofi"){ bctx.fillStyle="rgba(235,205,165,.4)"; for(const e of bgFire){ bctx.fillRect(e.x,e.y,1.6,1.6); e.y-=e.sp*.35; e.x+=Math.sin(phase*.25+e.a)*.4; if(e.y<0){e.y=H;e.x=Math.random()*W;} } }
+  else if(k==="forest"){ for(const f of bgFire){ const a=.3+.5*Math.abs(Math.sin(phase*.8+f.a)); bctx.fillStyle="rgba(190,255,150,"+a.toFixed(2)+")"; bctx.beginPath(); bctx.arc(f.x,f.y,f.r,0,7); bctx.fill(); f.x+=Math.sin(phase*.3+f.a)*.4; f.y-=f.sp*.3; if(f.y<H*.32){f.y=H;f.x=Math.random()*W;} } }
+  else if(k==="space"){ const c=bgComet; c.x-=1.1*(playing?1.4:.7); c.y+=.5*(playing?1.4:.7); if(c.x<-60){c.x=W+40;c.y=Math.random()*H*.4;}
     const g=bctx.createLinearGradient(c.x,c.y,c.x+70,c.y-30); g.addColorStop(0,"rgba(200,224,255,.8)"); g.addColorStop(1,"rgba(200,224,255,0)"); bctx.strokeStyle=g; bctx.lineWidth=2.4; bctx.beginPath(); bctx.moveTo(c.x,c.y); bctx.lineTo(c.x+70,c.y-30); bctx.stroke(); bctx.fillStyle="#eaf2ff"; bctx.beginPath(); bctx.arc(c.x,c.y,2.6,0,7); bctx.fill(); }
 }
 function draw(){ requestAnimationFrame(draw); const w=cv.width,h=cv.height; cx.clearRect(0,0,w,h);
