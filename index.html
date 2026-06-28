@@ -61,6 +61,8 @@ body[data-skin="rain"] #rain{opacity:.45}
 body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 
 .wrap{display:flex;flex-direction:column;align-items:stretch;width:min(880px,94vw)}
+/* shrink the whole box to half its length AND half its width, kept centered (desktop) */
+body:not(.mobile) .wrap{transform:scale(.5);transform-origin:center center}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-left:6px;max-width:100%}
 .tab{font-family:'Press Start 2P',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;color:var(--dim);
   background:#0a1228;border:2px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;padding:8px 11px 11px;
