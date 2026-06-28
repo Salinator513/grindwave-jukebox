@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>GRINDWAVE — generative radio</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#36e3ff">
+<meta name="theme-color" id="themecolor" content="#0a1020">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GRINDWAVE">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -96,10 +96,15 @@ body:not(.mobile), body:not(.mobile) *{cursor:none !important}
 .chips{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 .chip{font-size:15px;padding:1px 8px;border:1px solid var(--line);border-radius:999px;color:var(--dim);background:#0a1330}
 .chip b{color:var(--accent)}
+/* KEY/SCALE/TEMPO/LEN are detail metadata — desktop reveals them only on screen hover; mobile drops them entirely (see mobile block) */
+body:not(.mobile) .nowrap .chips{opacity:0;transform:translateY(4px);transition:opacity .22s ease,transform .22s ease;pointer-events:none}
+body:not(.mobile) .screen:hover .chips{opacity:1;transform:none}
 
 .side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .list{background:var(--pbg);border:2px solid var(--line);border-radius:12px;padding:6px;overflow-y:auto;max-height:250px;
-  cursor:grab;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
+  cursor:grab;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 13px,#000 calc(100% - 13px),transparent 100%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 13px,#000 calc(100% - 13px),transparent 100%)}
 .list::-webkit-scrollbar{display:none}
 .list.grabbing{cursor:grabbing}
 .row{position:relative;display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:19px;color:var(--ink);transition:background .12s, transform .12s}
@@ -226,14 +231,24 @@ body.mobile #bgscrim{background:radial-gradient(140% 140% at 50% 42%, transparen
 #gbframe{display:none;position:absolute;inset:0;pointer-events:none;z-index:5}
 body[data-skin="gameboy"] #gbframe{display:block}
 body[data-skin="gameboy"] .shell{padding:16px 92px 126px 92px}
-#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%);background:radial-gradient(circle,#3a3a42 0 8px,transparent 9px)}
-#gbframe .dpad::before,#gbframe .dpad::after{content:"";position:absolute;background:#2c2c30;border-radius:5px;box-shadow:inset 0 0 0 1px #111,0 3px 0 #0a0a0a}
+#gbframe .dpad{position:absolute;left:20px;top:46%;width:62px;height:62px;transform:translateY(-50%);
+  background:radial-gradient(circle at 50% 50%,#4a4a54 0 7px,transparent 8px);z-index:2}
+#gbframe .dpad::before,#gbframe .dpad::after{content:"";position:absolute;border-radius:6px;
+  background:linear-gradient(180deg,#3c3c44,#26262c);box-shadow:inset 0 1px 0 #ffffff22,inset 0 0 0 1px #111,0 3px 0 #0a0a0a}
 #gbframe .dpad::before{left:22px;top:0;width:18px;height:62px}
 #gbframe .dpad::after{left:0;top:22px;width:62px;height:18px}
-#gbframe .ab{position:absolute;right:14px;top:44%;width:74px;height:96px;transform:translateY(-50%) rotate(-18deg)}
-#gbframe .ab span{position:absolute;width:36px;height:36px;border-radius:50%;background:#8a1f4f;box-shadow:inset 0 -2px 4px #0006,0 3px 0 #4a1029;color:#ffd9ec;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:11px}
-#gbframe .ab .bbtn{left:0;top:44px}
-#gbframe .ab .abtn{right:0;top:4px}
+#gbframe .ab{position:absolute;right:14px;top:44%;width:78px;height:100px;transform:translateY(-50%) rotate(-18deg)}
+#gbframe .ab span{position:absolute;width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#c2356f,#8a1f4f 60%,#5e1334);
+  box-shadow:inset 0 2px 3px #ffffff55,inset 0 -3px 5px #0008,0 4px 0 #4a1029,0 0 14px #8a1f4f88;
+  color:#ffe3f0;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:12px;text-shadow:0 1px 1px #0008}
+#gbframe .ab .bbtn{left:0;top:48px}
+#gbframe .ab .abtn{right:0;top:4px;animation:gbidle 2.4s ease-in-out infinite}
+/* function hint under each face button so the controls read as obvious actions */
+#gbframe .ab span::after{content:attr(data-fn);position:absolute;top:42px;left:50%;transform:translateX(-50%);
+  font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:.5px;color:#46502c;white-space:nowrap;text-shadow:0 1px 0 #e7ead055}
+@keyframes gbidle{0%,100%{box-shadow:inset 0 2px 3px #ffffff55,inset 0 -3px 5px #0008,0 4px 0 #4a1029,0 0 12px #8a1f4f88}
+  50%{box-shadow:inset 0 2px 3px #ffffff55,inset 0 -3px 5px #0008,0 4px 0 #4a1029,0 0 22px #d23b7e}}
 #gbframe .ss{position:absolute;left:50%;bottom:42px;transform:translateX(-50%) rotate(-18deg);display:flex;gap:26px}
 #gbframe .ss span{position:relative;width:42px;height:11px;border-radius:7px;background:#2c2c30;box-shadow:inset 0 0 0 1px #111,0 2px 0 #0a0a0a}
 #gbframe .ss span::after{content:attr(data-l);position:absolute;left:0;top:13px;width:100%;text-align:center;font-family:'Press Start 2P',monospace;font-size:6px;color:#46502c}
@@ -263,40 +278,83 @@ body.mobile[data-skin="gameboy"] #gbframe .speaker{display:none}
 #tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transition:opacity .12s;font-family:'VT323',monospace;font-size:16px;line-height:1.15;color:var(--ink);letter-spacing:.5px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--accent);border-radius:8px;padding:4px 9px;max-width:250px;text-shadow:0 0 6px #000;box-shadow:0 0 14px color-mix(in srgb,var(--accent) 50%,transparent), inset 0 0 0 1px #ffffff10}
 body[data-skin="cyber"] #tip{border-radius:0;clip-path:polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))}
 
-/* mobile layout (narrow viewports) — let the page scroll; the desktop build pins the body */
-@media(max-width:700px){
+/* ============ MOBILE — completely separate build (JS-detected `body.mobile`) ============
+   Compact glass layout: WAY smaller text, everything above the fold (no scrolling to reach
+   the controls), blended/borderless panels over the AI art, a real focus vignette, fully
+   tappable rows & buttons, no KEY/SCALE chips, none of the desktop-only marquee/hint that
+   used to overflow. Game Boy is excluded from the glass treatment so it stays opaque plastic. */
+@media(max-width:700px){           /* lightweight fallback for narrow NON-touch viewports */
   html,body{overflow-x:hidden;overflow-y:auto;height:auto}
-  body{display:block;place-items:initial;min-height:100vh;min-height:100dvh}
-  .wrap{width:90vw;margin:4vh auto}
+  body{display:block;place-items:initial;min-height:100dvh}
+  .wrap{width:92vw;margin:3vh auto}
   .main{grid-template-columns:1fr}
   .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
-  #viz{height:170px}
-  .list{max-height:46vh}
-  .controls{flex-wrap:wrap;justify-content:center}
-  .vol{margin-left:0;width:100%;justify-content:center;margin-top:4px}
-  button.btn{font-variant-emoji:text}
-  .np-title{font-size:13px;word-break:break-word}
 }
-/* touch devices (JS-detected: coarse pointer / mobile UA) — scrollable page + comfy targets */
-body.mobile{
-  overflow-x:hidden;overflow-y:auto;display:block;place-items:initial;
-  height:auto;min-height:100vh;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;
-  padding:calc(env(safe-area-inset-top) + 8px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 16px) env(safe-area-inset-left);
-}
-body.mobile .wrap{width:min(440px,86vw);margin:6vh auto}
-/* readability scrim behind the NOW PLAYING overlay on busy mobile scenes */
-body.mobile .nowrap{background:linear-gradient(transparent,rgba(4,6,12,.6) 38%);padding-top:14px;border-radius:0 0 10px 10px}
+body.mobile{ overflow-x:hidden;overflow-y:auto;display:block;place-items:initial;
+  height:auto;min-height:100dvh;-webkit-overflow-scrolling:touch;cursor:auto !important;font-size:14px;
+  padding:calc(env(safe-area-inset-top) + 4px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 10px) env(safe-area-inset-left); }
 body.mobile #cur{display:none}
-body.mobile button.btn{padding:11px 15px;font-size:22px}
-body.mobile .play{padding:11px 22px}
-body.mobile .row{padding:13px 10px;font-size:20px}
-/* the desktop vignette is calibrated for big screens; on a phone its huge inset shadow swallows
-   the whole viewport, so dial it back and let the section background read through */
-body.mobile #vig{opacity:.10;box-shadow:inset 0 0 90px 28px rgba(0,0,0,.6), inset 0 0 38px 10px rgba(0,0,0,.5)}
-body.mobile #vig.big{box-shadow:inset 0 0 150px 70px rgba(0,0,0,.88)}
-body.mobile #bg::before,body.mobile #bg::after{opacity:.30;filter:blur(58px)}
+body.mobile .wrap{width:min(430px,95vw);margin:1.5vh auto 2.5vh}
+/* tabs — tiny, edge-faded horizontal scroll */
+body.mobile .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:5px;padding-left:3px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12px,#000 calc(100% - 12px),transparent)}
+body.mobile .tabs::-webkit-scrollbar{display:none}
+body.mobile .tab{font-size:8px;letter-spacing:.5px;padding:6px 9px 8px;border-width:1px;border-radius:8px 8px 0 0}
+/* topbar / titles — way smaller */
+body.mobile .topbar{gap:7px;margin-bottom:8px}
+body.mobile .logo{font-size:12px}
+body.mobile .tag{font-size:12px}
+body.mobile .power{font-size:11px;gap:5px}
+body.mobile .led{width:7px;height:7px}
+/* layout */
+body.mobile .main{grid-template-columns:1fr;gap:9px}
+body.mobile .side{gap:8px}
+/* screen / visualizer + NOW PLAYING overlay */
+body.mobile #viz{height:126px}
+body.mobile .nowrap{left:10px;right:10px;bottom:8px;gap:1px;background:linear-gradient(transparent,rgba(4,6,12,.68) 44%);padding:16px 0 2px;border-radius:0 0 12px 12px}
+body.mobile .np-label{font-size:9px;letter-spacing:1.5px}
+body.mobile .np-title{font-size:11px;word-break:break-word}
+body.mobile .np-mood{font-size:11px}
+body.mobile .nowrap .chips{display:none}
+/* station list — short enough that controls stay on-screen; smaller rows, fully tappable */
+body.mobile .list{max-height:36vh}
+body.mobile .row{padding:9px;font-size:13px;gap:7px;border-radius:9px;min-height:42px}
+body.mobile .row .nm{font-size:13px}
+body.mobile .row .meta{font-size:10px}
+body.mobile .row .dur{display:none}
+body.mobile .dot{width:9px;height:9px}
+/* controls — compact; each button fills its slot so the whole bordered area is tappable; vol on its own row */
+body.mobile .controls{flex-wrap:wrap;justify-content:center;gap:6px;padding:7px}
+body.mobile button.btn{flex:1 1 0;min-width:0;padding:12px 0;font-size:18px;border-radius:10px;min-height:48px;font-variant-emoji:text}
+body.mobile .play{flex:1.4 1 0}
+body.mobile .vol{margin-left:0;flex:1 1 100%;width:100%;justify-content:center;margin-top:6px;font-size:12px}
+body.mobile input[type=range]{width:62%;height:10px}
+/* drop desktop-only chrome that overflowed awkwardly on phones */
+body.mobile .marquee{display:none}
+body.mobile .hint{display:none}
+/* a real focus vignette on mobile (the old one was dialled down to nothing) */
+body.mobile #vig{opacity:.55;box-shadow:inset 0 0 120px 42px rgba(0,0,0,.72), inset 0 0 48px 14px rgba(0,0,0,.55);
+  background:radial-gradient(132% 120% at 50% 44%, transparent 40%, rgba(0,0,0,.6) 100%)}
+body.mobile #vig.big{opacity:.92;box-shadow:inset 0 0 210px 95px rgba(0,0,0,.93)}
 body.mobile #bgcanvas{opacity:.9}
+body.mobile #bg::before,body.mobile #bg::after{opacity:.30;filter:blur(58px)}
+/* Game Boy keeps its function labels off the cramped mobile deck */
+body.mobile #gbframe .ab span::after{display:none}
+/* ---- glass / blended-border treatment for every skin EXCEPT Game Boy (stays opaque plastic) ---- */
+body.mobile:not([data-skin="gameboy"]) .shell{padding:12px 12px 14px;border-width:1px;border-radius:16px;
+  border-color:color-mix(in srgb,var(--accent) 34%,transparent);
+  background:color-mix(in srgb,var(--panel) 62%,transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);
+  box-shadow:0 10px 34px rgba(0,0,0,.5),inset 0 0 0 1px #ffffff14}
+body.mobile:not([data-skin="gameboy"]) .screen{border-width:1px;border-radius:12px;
+  border-color:color-mix(in srgb,var(--ink) 14%,transparent);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--sbg1) 64%,transparent),color-mix(in srgb,var(--sbg2) 78%,transparent));
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+body.mobile:not([data-skin="gameboy"]) .list{border:none;border-radius:12px;padding:4px;background:color-mix(in srgb,var(--pbg) 48%,transparent)}
+body.mobile:not([data-skin="gameboy"]) .controls{border:none;border-radius:12px;background:color-mix(in srgb,var(--pbg) 48%,transparent)}
+body.mobile:not([data-skin="gameboy"]) .tab{background:color-mix(in srgb,var(--panel) 55%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 </style>
 </head>
 <body>
@@ -317,7 +375,7 @@ body.mobile #bgcanvas{opacity:.9}
     <div class="tag"><span id="tagtxt">pixel radio</span><span class="blink">_</span></div>
     <div class="power"><span class="led" id="led"></span><span id="pstat">STANDBY</span></div>
   </div>
-  <div id="gbframe" aria-hidden="true"><div class="dpad"></div><div class="ab"><span class="bbtn">B</span><span class="abtn">A</span></div><div class="ss"><span data-l="SELECT"></span><span data-l="START"></span></div><div class="speaker"><i></i><i></i><i></i><i></i><i></i></div></div>
+  <div id="gbframe" aria-hidden="true"><div class="dpad" data-tip="D-pad — ◀▶ change station · ▲▼ volume"></div><div class="ab"><span class="bbtn" data-fn="MIX" data-tip="B — reshuffle this tune">B</span><span class="abtn" data-fn="PLAY" data-tip="A — play / pause">A</span></div><div class="ss"><span data-l="SELECT" data-tip="SELECT — previous genre"></span><span data-l="START" data-tip="START — next genre"></span></div><div class="speaker"><i></i><i></i><i></i><i></i><i></i></div></div>
   <div class="main">
     <div class="screen">
       <canvas id="viz" width="520" height="212"></canvas>
@@ -378,6 +436,8 @@ const SECTION_META={
   dungeon:{label:"DUNGEON",tag:"torchlight",tip:"15 RPG dungeon tracks"},
 };
 const SECTION_ORDER=Object.keys(SECTION_META);
+/* per-section colour for the iOS Safari top/bottom chrome so the bars blend into the scene instead of going white */
+const SECTION_BAR={ pixel:"#05060a", cyber:"#040402", rain:"#050a14", vapor:"#0c1530", gameboy:"#0c1a0a", matrix:"#000000", lofi:"#1a130c", forest:"#08160d", space:"#020108", dungeon:"#0c0805" };
 // forced palettes for strong-identity skins (others use station colors)
 const SKIN_ACCENT={ gameboy:["#9bbc0f","#306230"], matrix:["#00ff66","#1aff8c"] };
 // per-section sound character
@@ -785,7 +845,7 @@ function setStation(i){ station=STATIONS[(i+STATIONS.length)%STATIONS.length]; s
   applyTheme(); curStep=0; loopN=0; beatTimes=[]; if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); setRainLevel(); } renderList(); setUI(); updateMedia(); }
 function shuffle(){ salt=(salt+0x9e3779b1)>>>0; curStep=0; if(playing){ swapBus(); nextTime=ctx.currentTime+0.04; regen(); } flash(); }
 function setSection(key){ if(!SECTIONS[key])return; sectionKey=key; STATIONS=SECTIONS[key]; station=STATIONS[0];
-  document.body.dataset.skin=key; setBgImage(key); renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
+  document.body.dataset.skin=key; setBgImage(key); setBarColor(key); renderTabs(); $("tagtxt").textContent=SECTION_META[key].tag;
   salt=(Math.random()*4294967296)>>>0; curStep=0; loopN=0; beatTimes=[]; applyTheme(); renderList(); setUI(); fxReset();
   if(playing){ swapBus(); nextTime=ctx.currentTime+0.06; regen(); startAmbience(); } updateMedia(); }
 
@@ -807,6 +867,7 @@ function updateMedia(){ if(!("mediaSession" in navigator))return; try{
 const $=id=>document.getElementById(id);
 function applyTheme(){ const F=SKIN_ACCENT[sectionKey]; const a=F?F[0]:station.a, b=F?F[1]:station.b;
   document.documentElement.style.setProperty('--accent',a); document.documentElement.style.setProperty('--accent2',b); }
+function setBarColor(key){ const m=$("themecolor"); if(m) m.setAttribute("content", SECTION_BAR[key]||"#05060a"); }
 function fmtTime(sec){ sec=Math.round(sec); return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0"); }
 function songLen(s){ return s.loops*16*60/s.bpm; }
 function renderTabs(){ const T=$("tabs"); T.innerHTML="";
@@ -1096,7 +1157,7 @@ function initGbControls(){ const gb=$("gbframe"); if(!gb) return; const led=$("l
     mk("left:0;bottom:0;width:100%;height:40%", ()=>gbVol(-7));
     mk("left:0;top:30%;width:40%;height:40%", ()=>gbStation(-1));
     mk("right:0;top:30%;width:40%;height:40%", ()=>gbStation(1)); } }
-setupMedia(); renderTabs(); applyTheme(); renderList(); setUI(); marquee(); initCursor(); initGbControls(); sizeBg(); draw();
+setupMedia(); renderTabs(); applyTheme(); setBarColor(sectionKey); renderList(); setUI(); marquee(); initCursor(); initGbControls(); sizeBg(); draw();
 </script>
 <script>
 (() => {
